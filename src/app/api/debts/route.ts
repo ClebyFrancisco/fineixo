@@ -26,6 +26,50 @@ const debtSchema = z.object({
   installmentCount: z.number().min(1).optional(), // Quantidade de parcelas (quando isTotalAmount é true)
 });
 
+// Função auxiliar para recalcular o limite do cartão baseado no total do mês
+async function recalculateCreditCardLimit(
+  creditCard: any,
+  month: string,
+  userId: any
+) {
+  // Buscar todas as dívidas do mês (compras + reajustes)
+  const monthDebts = await Debt.find({
+    creditCardId: creditCard._id,
+    userId: userId,
+    month: month,
+    paid: false,
+  });
+
+  // Calcular o total do mês (compras + reajustes)
+  const monthTotal = monthDebts.reduce((sum, debt) => sum + debt.amount, 0);
+
+  // Buscar todas as dívidas não pagas de outros meses
+  const allUnpaidDebts = await Debt.find({
+    creditCardId: creditCard._id,
+    userId: userId,
+    paid: false,
+  });
+
+  // Calcular o total de todas as dívidas não pagas (exceto este mês)
+  const otherMonthsTotal = allUnpaidDebts
+    .filter(debt => debt.month !== month)
+    .reduce((sum, debt) => sum + debt.amount, 0);
+
+  // O limite disponível deve ser: limite total - outras dívidas - total deste mês
+  creditCard.availableLimit = creditCard.limit - otherMonthsTotal - monthTotal;
+
+  // Garantir que o limite disponível não ultrapasse o limite total
+  if (creditCard.availableLimit > creditCard.limit) {
+    creditCard.availableLimit = creditCard.limit;
+  }
+  // Garantir que o limite disponível não fique negativo
+  if (creditCard.availableLimit < 0) {
+    creditCard.availableLimit = 0;
+  }
+
+  await creditCard.save();
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authResult = await authenticateRequest(request);
@@ -169,27 +213,43 @@ export async function POST(request: NextRequest) {
         const debt = await Debt.create(debtData);
         debts.push(debt);
 
-    // Se for uma compra de cartão de crédito, atualizar o limite disponível
-    // Reajustes negativos aumentam o limite, positivos diminuem
-    if (validatedData.creditCardId && !validatedData.paid) {
-      const creditCard = await CreditCard.findOne({
-        _id: validatedData.creditCardId,
-        userId: authResult.user.userId,
-      });
+      // Se for uma compra de cartão de crédito, atualizar o limite disponível
+      // Se houver reajuste no mês, não diminuir o limite (o reajuste já cobre tudo)
+      if (validatedData.creditCardId && !validatedData.paid) {
+        const creditCard = await CreditCard.findOne({
+          _id: validatedData.creditCardId,
+          userId: authResult.user.userId,
+        });
 
-      if (creditCard) {
-        creditCard.availableLimit -= installmentAmount; // Se negativo, aumenta o limite
-        // Garantir que o limite disponível não ultrapasse o limite total
-        if (creditCard.availableLimit > creditCard.limit) {
-          creditCard.availableLimit = creditCard.limit;
+        if (creditCard) {
+          // Verificar se há reajuste no mês desta parcela
+          const installmentMonth = `${installmentDueDate.getFullYear()}-${String(installmentDueDate.getMonth() + 1).padStart(2, '0')}`;
+          const hasAdjustment = await Debt.findOne({
+            creditCardId: validatedData.creditCardId,
+            userId: authResult.user.userId,
+            month: installmentMonth,
+            description: { $regex: /Reajuste de Fatura/i },
+            paid: false,
+          });
+
+          // Se não houver reajuste, diminuir o limite normalmente
+          if (!hasAdjustment) {
+            creditCard.availableLimit -= installmentAmount;
+            // Garantir que o limite disponível não ultrapasse o limite total
+            if (creditCard.availableLimit > creditCard.limit) {
+              creditCard.availableLimit = creditCard.limit;
+            }
+            // Garantir que o limite disponível não fique negativo
+            if (creditCard.availableLimit < 0) {
+              creditCard.availableLimit = 0;
+            }
+            await creditCard.save();
+          } else {
+            // Se houver reajuste, recalcular o limite baseado no total do mês
+            await recalculateCreditCardLimit(creditCard, installmentMonth, authResult.user.userId);
+          }
         }
-        // Garantir que o limite disponível não fique negativo
-        if (creditCard.availableLimit < 0) {
-          creditCard.availableLimit = 0;
-        }
-        await creditCard.save();
       }
-    }
       }
     } else {
       // Dívida única ou mensal
@@ -207,7 +267,7 @@ export async function POST(request: NextRequest) {
       debts.push(debt);
 
       // Se for uma compra de cartão de crédito, atualizar o limite disponível
-      // Reajustes negativos aumentam o limite, positivos diminuem
+      // Se houver reajuste no mês, não diminuir o limite (o reajuste já cobre tudo)
       if (validatedData.creditCardId && !validatedData.paid) {
         const creditCard = await CreditCard.findOne({
           _id: validatedData.creditCardId,
@@ -215,16 +275,35 @@ export async function POST(request: NextRequest) {
         });
 
         if (creditCard) {
-          creditCard.availableLimit -= validatedData.amount; // Se negativo, aumenta o limite
-          // Garantir que o limite disponível não ultrapasse o limite total
-          if (creditCard.availableLimit > creditCard.limit) {
-            creditCard.availableLimit = creditCard.limit;
+          // Verificar se há reajuste no mês
+          const debtMonth = validatedData.month || `${new Date(validatedData.dueDate).getFullYear()}-${String(new Date(validatedData.dueDate).getMonth() + 1).padStart(2, '0')}`;
+          const hasAdjustment = await Debt.findOne({
+            creditCardId: validatedData.creditCardId,
+            userId: authResult.user.userId,
+            month: debtMonth,
+            description: { $regex: /Reajuste de Fatura/i },
+            paid: false,
+          });
+
+          // Se for um reajuste, sempre recalcular o limite
+          if (validatedData.description && validatedData.description.includes('Reajuste de Fatura')) {
+            await recalculateCreditCardLimit(creditCard, debtMonth, authResult.user.userId);
+          } else if (!hasAdjustment) {
+            // Se não houver reajuste, diminuir o limite normalmente
+            creditCard.availableLimit -= validatedData.amount;
+            // Garantir que o limite disponível não ultrapasse o limite total
+            if (creditCard.availableLimit > creditCard.limit) {
+              creditCard.availableLimit = creditCard.limit;
+            }
+            // Garantir que o limite disponível não fique negativo
+            if (creditCard.availableLimit < 0) {
+              creditCard.availableLimit = 0;
+            }
+            await creditCard.save();
+          } else {
+            // Se houver reajuste, recalcular o limite baseado no total do mês
+            await recalculateCreditCardLimit(creditCard, debtMonth, authResult.user.userId);
           }
-          // Garantir que o limite disponível não fique negativo
-          if (creditCard.availableLimit < 0) {
-            creditCard.availableLimit = 0;
-          }
-          await creditCard.save();
         }
       }
     }

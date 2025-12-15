@@ -340,8 +340,17 @@ export default function CreditCardInvoicesPage() {
   };
 
   const handleAdjustment = () => {
+    // Mostrar o valor atual total (compras + reajustes)
+    const purchasesAmount = invoices
+      .filter((inv) => !inv.description.includes('Reajuste de Fatura'))
+      .reduce((sum, invoice) => sum + invoice.amount, 0);
+    const adjustmentsAmount = invoices
+      .filter((inv) => inv.description.includes('Reajuste de Fatura'))
+      .reduce((sum, invoice) => sum + invoice.amount, 0);
+    const currentTotal = purchasesAmount + adjustmentsAmount;
+    
     setAdjustmentFormData({
-      newTotalAmount: totalPurchases.toString(),
+      newTotalAmount: currentTotal.toString(),
       description: '',
     });
     setShowAdjustmentModal(true);
@@ -353,21 +362,41 @@ export default function CreditCardInvoicesPage() {
 
     setSubmittingAdjustment(true);
     try {
-      // Calcular data de vencimento baseada na data atual e dia de vencimento do cartão
-      const now = new Date();
-      const dueDateObj = new Date(now);
-      dueDateObj.setMonth(dueDateObj.getMonth() + 1);
-      // Usar dueDate se disponível, senão bestPurchaseDay
-      dueDateObj.setDate(creditCard.dueDate || creditCard.bestPurchaseDay);
+      // Usar o mês que está sendo visualizado na tela (currentMonth)
+      // O reajuste deve ser aplicado exclusivamente naquele mês
+      const [year, month] = currentMonth.split('-').map(Number);
       
-      const month = `${dueDateObj.getFullYear()}-${String(dueDateObj.getMonth() + 1).padStart(2, '0')}`;
+      // Calcular data de vencimento baseada no mês visualizado e dia de vencimento do cartão
+      const dueDateObj = new Date(year, month - 1, creditCard.dueDate || creditCard.bestPurchaseDay);
+      
+      // Garantir que o mês seja exatamente o currentMonth
+      const monthString = currentMonth;
 
-      // Calcular a diferença entre o novo valor e o valor atual das compras
-      const newTotalAmount = parseFloat(adjustmentFormData.newTotalAmount);
-      const adjustmentAmount = newTotalAmount - totalPurchases;
+      // O valor informado é o valor TOTAL da fatura que o usuário vai pagar
+      const newTotalInvoiceAmount = parseFloat(adjustmentFormData.newTotalAmount);
+
+      if (newTotalInvoiceAmount < 0) {
+        alert('O valor da fatura não pode ser negativo.');
+        setSubmittingAdjustment(false);
+        return;
+      }
+
+      // Calcular o valor atual total (compras + reajustes anteriores)
+      const purchasesAmount = invoices
+        .filter((inv) => !inv.description.includes('Reajuste de Fatura'))
+        .reduce((sum, invoice) => sum + invoice.amount, 0);
+      
+      const previousAdjustmentsAmount = invoices
+        .filter((inv) => inv.description.includes('Reajuste de Fatura'))
+        .reduce((sum, invoice) => sum + invoice.amount, 0);
+      
+      const currentTotalAmount = purchasesAmount + previousAdjustmentsAmount;
+      
+      // Calcular a diferença (este é o valor que será salvo como amount do reajuste)
+      const adjustmentDifference = newTotalInvoiceAmount - currentTotalAmount;
 
       // Se não houver diferença, não criar reajuste
-      if (adjustmentAmount === 0) {
+      if (adjustmentDifference === 0) {
         alert('O novo valor é igual ao valor atual. Não há necessidade de reajuste.');
         setSubmittingAdjustment(false);
         return;
@@ -377,13 +406,15 @@ export default function CreditCardInvoicesPage() {
         ? `Reajuste de Fatura: ${adjustmentFormData.description}`
         : 'Reajuste de Fatura';
 
+      // Sempre criar um novo reajuste (não atualizar o anterior)
+      // Cada reajuste é um item separado na listagem
       await api.post('/debts', {
         description: description,
-        amount: adjustmentAmount, // Diferença calculada (pode ser positivo ou negativo)
+        amount: adjustmentDifference, // Salvar a DIFERENÇA, não o valor total
         type: 'monthly',
         creditCardId: cardId,
         dueDate: dueDateObj.toISOString().split('T')[0],
-        month: month,
+        month: monthString, // Usar o mês que está sendo visualizado
         paid: false,
       });
 
@@ -401,16 +432,40 @@ export default function CreditCardInvoicesPage() {
     }
   };
 
-  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
-  const paidAmount = invoices
+  // Separar compras e reajustes
+  const purchases = invoices.filter((inv) => !inv.description.includes('Reajuste de Fatura'));
+  const adjustments = invoices.filter((inv) => inv.description.includes('Reajuste de Fatura'));
+  
+  // Se houver reajuste, os itens anteriores (compras) NÃO são considerados
+  // O total da fatura é apenas a soma dos reajustes
+  const purchasesAmount = purchases.reduce((sum, invoice) => sum + invoice.amount, 0);
+  const adjustmentsAmount = adjustments.reduce((sum, invoice) => sum + invoice.amount, 0);
+  
+  // Quando há reajuste, o total é: compras + reajustes (porque os reajustes são diferenças)
+  // Mas o valor final que o usuário paga é: compras + soma dos reajustes
+  const totalAmount = adjustments.length > 0
+    ? purchasesAmount + adjustmentsAmount  // Compras + diferenças dos reajustes = valor total final
+    : purchasesAmount; // Quando não há reajuste, apenas compras
+  
+  // Para o cálculo de pago e pendente
+  const paidPurchases = purchases
     .filter((invoice) => invoice.paid)
     .reduce((sum, invoice) => sum + invoice.amount, 0);
+  const paidAdjustments = adjustments
+    .filter((invoice) => invoice.paid)
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+  
+  const paidAmount = adjustments.length > 0
+    ? paidPurchases + paidAdjustments
+    : paidPurchases;
+  
   const unpaidAmount = totalAmount - paidAmount;
   
-  // Para o modal de reajuste, precisamos do total das compras (sem reajustes)
-  const totalPurchases = invoices
-    .filter((inv) => !inv.description.includes('Reajuste de Fatura'))
-    .reduce((sum, invoice) => sum + invoice.amount, 0);
+  // Para o modal de reajuste, mostrar o valor atual total (compras + reajustes)
+  const currentTotal = purchasesAmount + adjustmentsAmount;
+  
+  // Total das compras (sem reajustes) para exibição no modal
+  const totalPurchases = purchasesAmount;
 
   if (loading && !creditCard) {
     return (
@@ -800,72 +855,77 @@ export default function CreditCardInvoicesPage() {
               </h3>
               <div className="mb-4 p-3 bg-gray-50 rounded-md">
                 <p className="text-sm text-gray-600 mb-1">
-                  Valor Atual da Fatura (compras): <strong>{formatCurrency(totalPurchases)}</strong>
+                  Valor Atual Total: <strong>{formatCurrency(currentTotal)}</strong>
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  (Compras: {formatCurrency(totalPurchases)} + Reajustes: {formatCurrency(adjustmentsAmount)})
                 </p>
                 <p className="text-sm text-gray-600">
-                  Informe o novo valor total que será pago na fatura.
+                  Informe o valor total que será pago na fatura. O sistema calculará a diferença automaticamente.
                 </p>
               </div>
-              <form onSubmit={handleAdjustmentSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Novo Valor da Fatura (R$)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={adjustmentFormData.newTotalAmount}
-                    onChange={(e) =>
-                      setAdjustmentFormData({ ...adjustmentFormData, newTotalAmount: e.target.value })
-                    }
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ex: 505.00 ou 450.00"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Informe o valor total que será pago na fatura. O sistema calculará automaticamente a diferença.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Descrição (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={adjustmentFormData.description}
-                    onChange={(e) =>
-                      setAdjustmentFormData({ ...adjustmentFormData, description: e.target.value })
-                    }
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ex: Desconto por pontuação, Taxa adicional..."
-                  />
-                </div>
-                {adjustmentFormData.newTotalAmount && (
-                  <div className="p-3 bg-blue-50 rounded-md space-y-2">
-                    <p className="text-sm text-gray-700">
-                      <strong>Valor Atual:</strong>{' '}
-                      <span className="font-semibold">{formatCurrency(totalPurchases)}</span>
+                <form onSubmit={handleAdjustmentSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Valor Total da Fatura (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={adjustmentFormData.newTotalAmount}
+                      onChange={(e) =>
+                        setAdjustmentFormData({ ...adjustmentFormData, newTotalAmount: e.target.value })
+                      }
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ex: 520.00"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Este é o valor total que você vai pagar na fatura (incluindo juros, IOF, descontos, etc.)
                     </p>
-                    <p className="text-sm text-gray-700">
-                      <strong>Novo Valor:</strong>{' '}
-                      <span className="font-semibold">{formatCurrency(parseFloat(adjustmentFormData.newTotalAmount || '0'))}</span>
-                    </p>
-                    <div className="pt-2 border-t border-blue-200">
-                      <p className="text-sm text-gray-700">
-                        <strong>Reajuste:</strong>{' '}
-                        <span className={`text-lg font-bold ${
-                          parseFloat(adjustmentFormData.newTotalAmount || '0') - totalPurchases >= 0 
-                            ? 'text-blue-600' 
-                            : 'text-red-600'
-                        }`}>
-                          {parseFloat(adjustmentFormData.newTotalAmount || '0') - totalPurchases >= 0 ? '+' : ''}
-                          {formatCurrency(parseFloat(adjustmentFormData.newTotalAmount || '0') - totalPurchases)}
-                        </span>
-                      </p>
-                    </div>
                   </div>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Descrição (Opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={adjustmentFormData.description}
+                      onChange={(e) =>
+                        setAdjustmentFormData({ ...adjustmentFormData, description: e.target.value })
+                      }
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ex: Juros, IOF, Desconto por pontuação..."
+                    />
+                  </div>
+                  {adjustmentFormData.newTotalAmount && (
+                    <div className="p-3 bg-blue-50 rounded-md space-y-2">
+                      <p className="text-sm text-gray-700">
+                        <strong>Valor Atual:</strong>{' '}
+                        <span className="font-semibold">{formatCurrency(currentTotal)}</span>
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <strong>Novo Valor Total:</strong>{' '}
+                        <span className="font-semibold">{formatCurrency(parseFloat(adjustmentFormData.newTotalAmount || '0'))}</span>
+                      </p>
+                      {parseFloat(adjustmentFormData.newTotalAmount || '0') !== currentTotal && (
+                        <div className="pt-2 border-t border-blue-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>Diferença:</strong>{' '}
+                            <span className={`text-lg font-bold ${
+                              parseFloat(adjustmentFormData.newTotalAmount || '0') - currentTotal >= 0 
+                                ? 'text-blue-600' 
+                                : 'text-red-600'
+                            }`}>
+                              {parseFloat(adjustmentFormData.newTotalAmount || '0') - currentTotal >= 0 ? '+' : ''}
+                              {formatCurrency(parseFloat(adjustmentFormData.newTotalAmount || '0') - currentTotal)}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
