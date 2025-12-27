@@ -4,6 +4,7 @@ import Debt from '@/models/Debt';
 import Transaction from '@/models/Transaction';
 import Account from '@/models/Account';
 import Wallet from '@/models/Wallet';
+import CreditCard from '@/models/CreditCard';
 import { authenticateRequest } from '@/middleware/auth';
 import { z } from 'zod';
 
@@ -119,14 +120,31 @@ export async function POST(
 
     // Atualizar status da dívida
     const isFullyPaid = newTotalPaid >= debt.amount;
-    await Debt.findByIdAndUpdate(debt._id, {
-      paid: isFullyPaid,
-      paidAt: isFullyPaid ? paymentDate : debt.paidAt,
-    });
+    const updatedDebt = await Debt.findByIdAndUpdate(
+      debt._id,
+      {
+        paid: isFullyPaid,
+        paidAt: isFullyPaid ? paymentDate : debt.paidAt,
+      },
+      { new: true }
+    );
+
+    // Se a dívida está associada a um cartão de crédito, recalcular o limite disponível
+    if (updatedDebt && updatedDebt.creditCardId) {
+      const creditCard = await CreditCard.findOne({
+        _id: updatedDebt.creditCardId,
+        userId: authResult.user.userId,
+      });
+
+      if (creditCard && updatedDebt.month) {
+        // Recalcular o limite disponível baseado nas dívidas não pagas
+        await recalculateCreditCardLimit(creditCard, updatedDebt.month, authResult.user.userId);
+      }
+    }
 
     return NextResponse.json({
       transaction,
-      debt: await Debt.findById(debt._id),
+      debt: updatedDebt,
       message: isFullyPaid ? 'Dívida paga totalmente' : 'Pagamento parcial realizado',
     });
   } catch (error) {
@@ -143,6 +161,49 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+async function recalculateCreditCardLimit(
+  creditCard: any,
+  month: string,
+  userId: any
+) {
+  // Buscar todas as dívidas do mês (compras + reajustes) que não foram pagas
+  const monthDebts = await Debt.find({
+    creditCardId: creditCard._id,
+    userId: userId,
+    month: month,
+    paid: false,
+  });
+
+  // Calcular o total do mês (compras + reajustes não pagas)
+  const monthTotal = monthDebts.reduce((sum, debt) => sum + debt.amount, 0);
+
+  // Buscar todas as dívidas não pagas de outros meses
+  const allUnpaidDebts = await Debt.find({
+    creditCardId: creditCard._id,
+    userId: userId,
+    paid: false,
+  });
+
+  // Calcular o total de todas as dívidas não pagas (exceto este mês)
+  const otherMonthsTotal = allUnpaidDebts
+    .filter(debt => debt.month !== month)
+    .reduce((sum, debt) => sum + debt.amount, 0);
+
+  // O limite disponível deve ser: limite total - outras dívidas - total deste mês
+  creditCard.availableLimit = creditCard.limit - otherMonthsTotal - monthTotal;
+
+  // Garantir que o limite disponível não ultrapasse o limite total
+  if (creditCard.availableLimit > creditCard.limit) {
+    creditCard.availableLimit = creditCard.limit;
+  }
+  // Garantir que o limite disponível não fique negativo
+  if (creditCard.availableLimit < 0) {
+    creditCard.availableLimit = 0;
+  }
+
+  await creditCard.save();
 }
 
 function formatCurrency(value: number): string {

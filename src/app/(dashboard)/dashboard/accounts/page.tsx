@@ -39,11 +39,13 @@ export default function AccountsPage() {
     bank: '',
   });
   const [transactionFormData, setTransactionFormData] = useState({
-    type: 'income' as 'income' | 'expense',
+    type: 'income' as 'income' | 'expense' | 'transfer' | 'adjustment',
     amount: '',
     description: '',
     categoryId: '',
     date: new Date().toISOString().split('T')[0],
+    transferToAccountId: '', // Para transferências
+    newBalance: '', // Para reajuste de saldo
   });
   const [submitting, setSubmitting] = useState(false);
   const [submittingTransaction, setSubmittingTransaction] = useState(false);
@@ -99,6 +101,8 @@ export default function AccountsPage() {
       description: '',
       categoryId: '',
       date: new Date().toISOString().split('T')[0],
+      transferToAccountId: '',
+      newBalance: account.balance.toString(),
     });
   };
 
@@ -112,15 +116,93 @@ export default function AccountsPage() {
       const now = new Date(transactionFormData.date);
       const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-      await api.post('/transactions', {
-        type: transactionFormData.type,
-        amount: parseFloat(transactionFormData.amount),
-        description: transactionFormData.description,
-        categoryId: transactionFormData.categoryId || undefined,
-        accountId: selectedAccount._id,
-        date: transactionFormData.date,
-        month: month,
-      });
+      // Se for reajuste de saldo
+      if (transactionFormData.type === 'adjustment') {
+        if (!transactionFormData.newBalance) {
+          alert('Informe o novo saldo para o reajuste');
+          setSubmittingTransaction(false);
+          return;
+        }
+
+        const newBalance = parseFloat(transactionFormData.newBalance);
+        const currentBalance = selectedAccount.balance;
+        const difference = newBalance - currentBalance;
+
+        if (difference === 0) {
+          alert('O novo saldo é igual ao saldo atual. Não há necessidade de reajuste.');
+          setSubmittingTransaction(false);
+          return;
+        }
+
+        const description = transactionFormData.description || 
+          `Reajuste de Saldo: ${difference >= 0 ? '+' : ''}${formatCurrency(difference)}`;
+
+        // Criar transação de ajuste
+        await api.post('/transactions', {
+          type: difference >= 0 ? 'income' : 'expense',
+          amount: Math.abs(difference),
+          description: description,
+          categoryId: transactionFormData.categoryId || undefined,
+          accountId: selectedAccount._id,
+          date: transactionFormData.date,
+          month: month,
+        });
+
+        // Atualizar saldo diretamente
+        await api.put(`/accounts/${selectedAccount._id}`, {
+          balance: newBalance,
+        });
+      }
+      // Se for transferência, criar duas transações
+      else if (transactionFormData.type === 'transfer') {
+        if (!transactionFormData.transferToAccountId) {
+          alert('Selecione a conta de destino para a transferência');
+          setSubmittingTransaction(false);
+          return;
+        }
+
+        if (transactionFormData.transferToAccountId === selectedAccount._id) {
+          alert('A conta de destino deve ser diferente da conta de origem');
+          setSubmittingTransaction(false);
+          return;
+        }
+
+        const amount = parseFloat(transactionFormData.amount);
+        const description = transactionFormData.description || 'Transferência entre contas';
+
+        // Criar transação de saída na conta de origem
+        await api.post('/transactions', {
+          type: 'expense',
+          amount: amount,
+          description: `Transferência para: ${accounts.find(a => a._id === transactionFormData.transferToAccountId)?.name || 'Conta'}`,
+          categoryId: transactionFormData.categoryId || undefined,
+          accountId: selectedAccount._id,
+          date: transactionFormData.date,
+          month: month,
+        });
+
+        // Criar transação de entrada na conta de destino
+        await api.post('/transactions', {
+          type: 'income',
+          amount: amount,
+          description: `Transferência de: ${selectedAccount.name}`,
+          categoryId: transactionFormData.categoryId || undefined,
+          accountId: transactionFormData.transferToAccountId,
+          date: transactionFormData.date,
+          month: month,
+        });
+      } else {
+        // Transação normal (entrada ou saída)
+        await api.post('/transactions', {
+          type: transactionFormData.type,
+          amount: parseFloat(transactionFormData.amount),
+          description: transactionFormData.description,
+          categoryId: transactionFormData.categoryId || undefined,
+          accountId: selectedAccount._id,
+          date: transactionFormData.date,
+          month: month,
+        });
+      }
 
       setShowTransactionModal(false);
       setTransactionFormData({
@@ -129,6 +211,8 @@ export default function AccountsPage() {
         description: '',
         categoryId: '',
         date: new Date().toISOString().split('T')[0],
+        transferToAccountId: '',
+        newBalance: selectedAccount?.balance.toString() || '0',
       });
       
       // Atualizar lista de contas para refletir o novo saldo
@@ -286,16 +370,26 @@ export default function AccountsPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  transaction.type === 'income'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                              >
-                                {transaction.type === 'income' ? 'Entrada' : 'Saída'}
-                              </span>
-                              {transaction.categoryId && (
+                              {transaction.description?.includes('Transferência') ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Transferência
+                                </span>
+                              ) : transaction.description?.includes('Reajuste de Saldo') ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  Reajuste de Saldo
+                                </span>
+                              ) : (
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    transaction.type === 'income'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {transaction.type === 'income' ? 'Entrada' : 'Saída'}
+                                </span>
+                              )}
+                              {transaction.categoryId && !transaction.description?.includes('Transferência') && (
                                 <span
                                   className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                   style={{
@@ -322,10 +416,22 @@ export default function AccountsPage() {
                           <div className="ml-4">
                             <span
                               className={`text-lg font-semibold ${
-                                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                                transaction.description?.includes('Reajuste de Saldo')
+                                  ? 'text-orange-600'
+                                  : transaction.description?.includes('Transferência')
+                                  ? 'text-blue-600'
+                                  : transaction.type === 'income'
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
                               }`}
                             >
-                              {transaction.type === 'income' ? '+' : '-'}
+                              {transaction.description?.includes('Reajuste de Saldo')
+                                ? (transaction.type === 'income' ? '+' : '-')
+                                : transaction.description?.includes('Transferência')
+                                ? ''
+                                : transaction.type === 'income'
+                                ? '+'
+                                : '-'}
                               {formatCurrency(transaction.amount)}
                             </span>
                           </div>
@@ -358,42 +464,122 @@ export default function AccountsPage() {
                     onChange={(e) =>
                       setTransactionFormData({
                         ...transactionFormData,
-                        type: e.target.value as 'income' | 'expense',
+                        type: e.target.value as 'income' | 'expense' | 'transfer' | 'adjustment',
+                        transferToAccountId: e.target.value !== 'transfer' ? '' : transactionFormData.transferToAccountId,
+                        newBalance: e.target.value === 'adjustment' && selectedAccount 
+                          ? selectedAccount.balance.toString() 
+                          : transactionFormData.newBalance,
                       })
                     }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                   >
                     <option value="income">Entrada</option>
                     <option value="expense">Saída</option>
+                    <option value="transfer">Transferência entre Contas</option>
+                    <option value="adjustment">Reajuste de Saldo</option>
                   </select>
                 </div>
+                {transactionFormData.type === 'transfer' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Conta de Destino
+                    </label>
+                    <select
+                      value={transactionFormData.transferToAccountId}
+                      onChange={(e) =>
+                        setTransactionFormData({
+                          ...transactionFormData,
+                          transferToAccountId: e.target.value,
+                        })
+                      }
+                      required={transactionFormData.type === 'transfer'}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Selecione a conta de destino</option>
+                      {accounts
+                        .filter(acc => acc._id !== selectedAccount?._id)
+                        .map((account) => (
+                          <option key={account._id} value={account._id}>
+                            {account.name} - {account.bank}
+                          </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Conta de origem: <strong>{selectedAccount?.name}</strong>
+                    </p>
+                  </div>
+                )}
+                {transactionFormData.type === 'adjustment' && (
+                  <div>
+                    <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Saldo Atual:</strong> {formatCurrency(selectedAccount?.balance || 0)}
+                      </p>
+                    </div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Novo Saldo (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={transactionFormData.newBalance}
+                      onChange={(e) => {
+                        const newBalance = e.target.value;
+                        setTransactionFormData({
+                          ...transactionFormData,
+                          newBalance: newBalance,
+                        });
+                      }}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="0.00"
+                    />
+                    {transactionFormData.newBalance && selectedAccount && (
+                      <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                        <p className="text-sm text-gray-700">
+                          <strong>Diferença:</strong>{' '}
+                          <span className={`text-lg font-bold ${
+                            parseFloat(transactionFormData.newBalance) - (selectedAccount.balance || 0) >= 0 
+                              ? 'text-green-600' 
+                              : 'text-red-600'
+                          }`}>
+                            {parseFloat(transactionFormData.newBalance) - (selectedAccount.balance || 0) >= 0 ? '+' : ''}
+                            {formatCurrency(parseFloat(transactionFormData.newBalance) - (selectedAccount.balance || 0))}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {transactionFormData.type !== 'adjustment' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Valor (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required={transactionFormData.type !== 'adjustment'}
+                      value={transactionFormData.amount}
+                      onChange={(e) =>
+                        setTransactionFormData({
+                          ...transactionFormData,
+                          amount: e.target.value,
+                        })
+                      }
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Valor (R$)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={transactionFormData.amount}
-                    onChange={(e) =>
-                      setTransactionFormData({
-                        ...transactionFormData,
-                        amount: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Descrição
+                    Descrição {(transactionFormData.type === 'transfer' || transactionFormData.type === 'adjustment') && '(opcional)'}
                   </label>
                   <input
                     type="text"
-                    required
+                    required={transactionFormData.type !== 'transfer' && transactionFormData.type !== 'adjustment'}
                     value={transactionFormData.description}
                     onChange={(e) =>
                       setTransactionFormData({
@@ -402,8 +588,24 @@ export default function AccountsPage() {
                       })
                     }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Ex: Salário, Compras..."
+                    placeholder={
+                      transactionFormData.type === 'transfer' 
+                        ? 'Ex: Transferência mensal (opcional)' 
+                        : transactionFormData.type === 'adjustment'
+                        ? 'Ex: Ajuste por divergência (opcional)'
+                        : 'Ex: Salário, Compras...'
+                    }
                   />
+                  {transactionFormData.type === 'transfer' && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Se não informar, será usado "Transferência entre contas"
+                    </p>
+                  )}
+                  {transactionFormData.type === 'adjustment' && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Se não informar, será gerada automaticamente com base na diferença
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -459,12 +661,22 @@ export default function AccountsPage() {
                     type="submit"
                     disabled={submittingTransaction}
                     className={`flex-1 px-4 py-2 text-white rounded-md disabled:opacity-50 ${
-                      transactionFormData.type === 'income'
+                      transactionFormData.type === 'adjustment'
+                        ? 'bg-orange-600 hover:bg-orange-700'
+                        : transactionFormData.type === 'transfer'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : transactionFormData.type === 'income'
                         ? 'bg-green-600 hover:bg-green-700'
                         : 'bg-red-600 hover:bg-red-700'
                     }`}
                   >
-                    {submittingTransaction ? 'Salvando...' : 'Salvar'}
+                    {submittingTransaction 
+                      ? 'Salvando...' 
+                      : transactionFormData.type === 'transfer' 
+                        ? 'Transferir' 
+                        : transactionFormData.type === 'adjustment'
+                        ? 'Aplicar Reajuste'
+                        : 'Salvar'}
                   </button>
                 </div>
               </form>

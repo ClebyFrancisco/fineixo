@@ -25,6 +25,7 @@ interface Invoice {
   categoryId?: { _id?: string; name: string; color?: string };
   month?: string;
   installments?: { current: number; total: number };
+  totalPaid?: number; // Total já pago
 }
 
 interface Category {
@@ -75,10 +76,23 @@ export default function CreditCardInvoicesPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payFormData, setPayFormData] = useState({
+    amount: '',
+    payTotal: false,
+    accountId: '',
+    walletId: '',
+    date: new Date().toISOString().split('T')[0],
+  });
+  const [accounts, setAccounts] = useState<Array<{ _id: string; name: string }>>([]);
+  const [wallets, setWallets] = useState<Array<{ _id: string; name: string }>>([]);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     fetchCreditCard();
     fetchCategories();
+    fetchAccounts();
+    fetchWallets();
   }, [cardId]);
 
   useEffect(() => {
@@ -104,7 +118,21 @@ export default function CreditCardInvoicesPage() {
       const data = await api.get<{ debts: Invoice[] }>(
         `/debts?creditCardId=${cardId}&month=${currentMonth}`
       );
-      setInvoices(data.debts);
+      // Buscar total pago para cada fatura
+      const invoicesWithPayments = await Promise.all(
+        data.debts.map(async (invoice) => {
+          try {
+            const payments = await api.get<{ transactions: Array<{ amount: number }> }>(
+              `/transactions?debtId=${invoice._id}`
+            );
+            const totalPaid = payments.transactions.reduce((sum, t) => sum + t.amount, 0);
+            return { ...invoice, totalPaid };
+          } catch {
+            return { ...invoice, totalPaid: 0 };
+          }
+        })
+      );
+      setInvoices(invoicesWithPayments);
     } catch (error) {
       console.error('Error fetching invoices:', error);
     } finally {
@@ -118,6 +146,154 @@ export default function CreditCardInvoicesPage() {
       setCategories(data.categories);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const data = await api.get<{ accounts: Array<{ _id: string; name: string }> }>('/accounts');
+      setAccounts(data.accounts);
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+    }
+  };
+
+  const fetchWallets = async () => {
+    try {
+      const data = await api.get<{ wallets: Array<{ _id: string; name: string }> }>('/wallets');
+      setWallets(data.wallets);
+    } catch (error) {
+      console.error('Error fetching wallets:', error);
+    }
+  };
+
+  const handlePayInvoice = () => {
+    // Calcular o total pendente da fatura
+    const unpaidInvoices = invoices.filter(inv => !inv.paid);
+    const totalUnpaid = unpaidInvoices.reduce((sum, inv) => {
+      const remaining = inv.totalPaid ? inv.amount - inv.totalPaid : inv.amount;
+      return sum + remaining;
+    }, 0);
+    
+    setPayFormData({
+      amount: totalUnpaid.toString(),
+      payTotal: false,
+      accountId: '',
+      walletId: '',
+      date: new Date().toISOString().split('T')[0],
+    });
+    setShowPayModal(true);
+  };
+
+  const handlePaySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setPaying(true);
+    try {
+      const unpaidInvoices = invoices.filter(inv => !inv.paid);
+      if (unpaidInvoices.length === 0) {
+        alert('Não há itens pendentes para pagar');
+        setPaying(false);
+        return;
+      }
+
+      // Calcular o total pendente
+      const totalUnpaid = unpaidInvoices.reduce((sum, inv) => {
+        const remaining = inv.totalPaid ? inv.amount - inv.totalPaid : inv.amount;
+        return sum + remaining;
+      }, 0);
+
+      // Valor a pagar
+      const paymentAmount = payFormData.payTotal 
+        ? totalUnpaid 
+        : parseFloat(payFormData.amount);
+
+      if (paymentAmount <= 0) {
+        alert('O valor deve ser maior que zero');
+        setPaying(false);
+        return;
+      }
+
+      if (paymentAmount > totalUnpaid) {
+        alert(`O valor não pode ser maior que o total pendente (${formatCurrency(totalUnpaid)})`);
+        setPaying(false);
+        return;
+      }
+
+      // Preparar payload base
+      const basePayload: any = {
+        date: payFormData.date,
+      };
+
+      if (payFormData.accountId) {
+        basePayload.accountId = payFormData.accountId;
+      } else if (payFormData.walletId) {
+        basePayload.walletId = payFormData.walletId;
+      }
+
+      // Distribuir o pagamento proporcionalmente entre os itens não pagos
+      const totalAmount = unpaidInvoices.reduce((sum, inv) => {
+        const remaining = inv.totalPaid ? inv.amount - inv.totalPaid : inv.amount;
+        return sum + remaining;
+      }, 0);
+
+      // Calcular pagamentos proporcionais
+      const payments: Array<{ invoiceId: string; amount: number }> = [];
+      let totalCalculated = 0;
+
+      unpaidInvoices.forEach((invoice, index) => {
+        const remaining = invoice.totalPaid ? invoice.amount - invoice.totalPaid : invoice.amount;
+        const proportion = remaining / totalAmount;
+        let itemPaymentAmount = paymentAmount * proportion;
+
+        // Arredondar para 2 casas decimais
+        itemPaymentAmount = Math.round(itemPaymentAmount * 100) / 100;
+
+        // No último item, ajustar para garantir que a soma seja exata
+        if (index === unpaidInvoices.length - 1) {
+          itemPaymentAmount = Math.round((paymentAmount - totalCalculated) * 100) / 100;
+        }
+
+        // Garantir que não pague mais que o restante
+        if (itemPaymentAmount > remaining) {
+          itemPaymentAmount = remaining;
+        }
+
+        if (itemPaymentAmount > 0) {
+          payments.push({
+            invoiceId: invoice._id,
+            amount: itemPaymentAmount,
+          });
+          totalCalculated += itemPaymentAmount;
+        }
+      });
+
+      // Executar pagamentos
+      const paymentPromises = payments.map((payment) => {
+        const payload = {
+          ...basePayload,
+          amount: payment.amount,
+        };
+        return api.post(`/debts/${payment.invoiceId}/pay`, payload);
+      });
+
+      await Promise.all(paymentPromises);
+
+      setShowPayModal(false);
+      setPayFormData({
+        amount: '',
+        payTotal: false,
+        accountId: '',
+        walletId: '',
+        date: new Date().toISOString().split('T')[0],
+      });
+      fetchInvoices();
+      fetchCreditCard(); // Atualizar limite do cartão
+      alert('Pagamento realizado com sucesso!');
+    } catch (error: any) {
+      alert(error.message || 'Erro ao processar pagamento');
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -545,6 +721,13 @@ export default function CreditCardInvoicesPage() {
           <h2 className="text-lg font-medium text-gray-900">Itens da Fatura</h2>
           <div className="flex space-x-2">
             <button
+              onClick={handlePayInvoice}
+              className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={invoices.filter(inv => !inv.paid).length === 0}
+            >
+              Pagar Fatura
+            </button>
+            <button
               onClick={handleAdjustment}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
             >
@@ -577,10 +760,16 @@ export default function CreditCardInvoicesPage() {
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           invoice.paid
                             ? 'bg-green-100 text-green-800'
+                            : invoice.totalPaid && invoice.totalPaid > 0
+                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
-                        {invoice.paid ? 'Pago' : 'Pendente'}
+                        {invoice.paid 
+                          ? 'Pago Total' 
+                          : invoice.totalPaid && invoice.totalPaid > 0
+                          ? `Pago Parcial (${formatCurrency(invoice.totalPaid)} / ${formatCurrency(invoice.amount)})`
+                          : 'Pendente'}
                       </span>
                       {invoice.categoryId && (
                         <span
@@ -607,18 +796,25 @@ export default function CreditCardInvoicesPage() {
                     </p>
                   </div>
                     <div className="ml-4 flex items-center space-x-2">
-                    <span
-                      className={`text-lg font-semibold ${
-                        invoice.paid 
-                          ? 'text-green-600' 
-                          : invoice.description.includes('Reajuste de Fatura')
-                          ? invoice.amount >= 0 ? 'text-blue-600' : 'text-red-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {invoice.description.includes('Reajuste de Fatura') && invoice.amount >= 0 ? '+' : ''}
-                      {formatCurrency(invoice.amount)}
-                    </span>
+                    <div>
+                      <span
+                        className={`text-lg font-semibold ${
+                          invoice.paid 
+                            ? 'text-green-600' 
+                            : invoice.description.includes('Reajuste de Fatura')
+                            ? invoice.amount >= 0 ? 'text-blue-600' : 'text-red-600'
+                            : 'text-red-600'
+                        }`}
+                      >
+                        {invoice.description.includes('Reajuste de Fatura') && invoice.amount >= 0 ? '+' : ''}
+                        {formatCurrency(invoice.amount)}
+                      </span>
+                      {invoice.totalPaid && invoice.totalPaid > 0 && !invoice.paid && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Restante: {formatCurrency(invoice.amount - invoice.totalPaid)}
+                        </p>
+                      )}
+                    </div>
                     {!invoice.paid && (
                       <div className="flex items-center space-x-1 ml-2">
                         <button
@@ -1014,6 +1210,162 @@ export default function CreditCardInvoicesPage() {
                   Cancelar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Pagamento */}
+      {showPayModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Pagar Fatura
+              </h3>
+              {(() => {
+                const unpaidInvoices = invoices.filter(inv => !inv.paid);
+                const totalUnpaid = unpaidInvoices.reduce((sum, inv) => {
+                  const remaining = inv.totalPaid ? inv.amount - inv.totalPaid : inv.amount;
+                  return sum + remaining;
+                }, 0);
+                const totalPaid = invoices.reduce((sum, inv) => sum + (inv.totalPaid || 0), 0);
+                const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+
+                return (
+                  <>
+                    <div className="text-sm text-gray-600 mb-4 space-y-1 p-3 bg-gray-50 rounded-md">
+                      <p><strong>Total da Fatura:</strong> {formatCurrency(totalAmount)}</p>
+                      {totalPaid > 0 && (
+                        <p><strong>Já Pago:</strong> {formatCurrency(totalPaid)}</p>
+                      )}
+                      <p><strong>Pendente:</strong> {formatCurrency(totalUnpaid)}</p>
+                    </div>
+                    <form onSubmit={handlePaySubmit} className="space-y-4">
+                      <div>
+                        <label className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            checked={payFormData.payTotal}
+                            onChange={(e) => {
+                              setPayFormData({
+                                ...payFormData,
+                                payTotal: e.target.checked,
+                                amount: e.target.checked ? totalUnpaid.toString() : payFormData.amount,
+                              });
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            Pagar Total ({formatCurrency(totalUnpaid)})
+                          </span>
+                        </label>
+                      </div>
+                      {!payFormData.payTotal && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Valor a Pagar (R$)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            max={totalUnpaid}
+                            required={!payFormData.payTotal}
+                            value={payFormData.amount}
+                            onChange={(e) => setPayFormData({ ...payFormData, amount: e.target.value })}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Máximo: {formatCurrency(totalUnpaid)}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Pagar com
+                        </label>
+                        <select
+                          value={
+                            payFormData.accountId
+                              ? `account-${payFormData.accountId}`
+                              : payFormData.walletId
+                              ? `wallet-${payFormData.walletId}`
+                              : ''
+                          }
+                          onChange={(e) => {
+                            if (e.target.value.startsWith('account-')) {
+                              setPayFormData({
+                                ...payFormData,
+                                accountId: e.target.value.replace('account-', ''),
+                                walletId: '',
+                              });
+                            } else if (e.target.value.startsWith('wallet-')) {
+                              setPayFormData({
+                                ...payFormData,
+                                walletId: e.target.value.replace('wallet-', ''),
+                                accountId: '',
+                              });
+                            } else {
+                              setPayFormData({ ...payFormData, accountId: '', walletId: '' });
+                            }
+                          }}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="">Carteira Principal (padrão)</option>
+                          {wallets.map((wallet) => (
+                            <option key={wallet._id} value={`wallet-${wallet._id}`}>
+                              Carteira: {wallet.name}
+                            </option>
+                          ))}
+                          {accounts.map((account) => (
+                            <option key={account._id} value={`account-${account._id}`}>
+                              Conta: {account.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Data do Pagamento
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={payFormData.date}
+                          onChange={(e) => setPayFormData({ ...payFormData, date: e.target.value })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div className="flex space-x-3 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPayModal(false);
+                            setPayFormData({
+                              amount: '',
+                              payTotal: false,
+                              accountId: '',
+                              walletId: '',
+                              date: new Date().toISOString().split('T')[0],
+                            });
+                          }}
+                          className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={paying}
+                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {paying ? 'Processando...' : 'Pagar'}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
