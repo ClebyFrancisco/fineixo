@@ -1,0 +1,62 @@
+name: Deploy to HostGator
+
+on:
+  push:
+    branches:
+      - main  # Altere para 'master' se sua branch principal for master
+  workflow_dispatch:  # Permite execução manual
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NODE_ENV: production
+      
+      - name: Deploy to HostGator via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOSTGATOR_HOST }}
+          username: ${{ secrets.HOSTGATOR_USER }}
+          key: ${{ secrets.HOSTGATOR_SSH_KEY }}
+          port: ${{ secrets.HOSTGATOR_PORT || 22 }}
+          source: ".next,public,package.json,package-lock.json,next.config.js,tsconfig.json,tailwind.config.ts,postcss.config.js"
+          target: "/home/${{ secrets.HOSTGATOR_USER }}/public_html"
+          strip_components: 0
+      
+      - name: Install production dependencies and restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTGATOR_HOST }}
+          username: ${{ secrets.HOSTGATOR_USER }}
+          key: ${{ secrets.HOSTGATOR_SSH_KEY }}
+          port: ${{ secrets.HOSTGATOR_PORT || 22 }}
+          script: |
+            cd ~/public_html
+            npm ci --production
+            if command -v pm2 &> /dev/null; then
+              pm2 restart myfinanceapp || pm2 start npm --name "myfinanceapp" -- start
+            else
+              pkill -f "next start" || true
+              nohup npm start > /dev/null 2>&1 &
+            fi
+

@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Debt from '@/models/Debt';
 import CreditCard from '@/models/CreditCard';
 import { authenticateRequest } from '@/middleware/auth';
+import { requireSubscription } from '@/middleware/subscription';
 import { z } from 'zod';
 
 const debtSchema = z.object({
@@ -118,9 +119,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request);
-    if ('error' in authResult) {
-      return authResult.error;
+    const subscriptionResult = await requireSubscription(request);
+    if ('error' in subscriptionResult) {
+      return subscriptionResult.error;
     }
 
     await connectDB();
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
       if (validatedData.creditCardId) {
         const creditCard = await CreditCard.findOne({
           _id: validatedData.creditCardId,
-          userId: authResult.user.userId,
+          userId: subscriptionResult.user.userId,
         });
         
         if (creditCard) {
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
           description: `${validatedData.description} (${i}/${installmentCount})`,
           amount: installmentAmount,
           type: validatedData.type,
-          userId: authResult.user.userId,
+          userId: subscriptionResult.user.userId,
           dueDate: installmentDueDate,
           installments: {
             current: i,
@@ -218,7 +219,7 @@ export async function POST(request: NextRequest) {
       if (validatedData.creditCardId && !validatedData.paid) {
         const creditCard = await CreditCard.findOne({
           _id: validatedData.creditCardId,
-          userId: authResult.user.userId,
+          userId: subscriptionResult.user.userId,
         });
 
         if (creditCard) {
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest) {
           const installmentMonth = `${installmentDueDate.getFullYear()}-${String(installmentDueDate.getMonth() + 1).padStart(2, '0')}`;
           const hasAdjustment = await Debt.findOne({
             creditCardId: validatedData.creditCardId,
-            userId: authResult.user.userId,
+            userId: subscriptionResult.user.userId,
             month: installmentMonth,
             description: { $regex: /Reajuste de Fatura/i },
             paid: false,
@@ -271,7 +272,7 @@ export async function POST(request: NextRequest) {
       if (validatedData.creditCardId && !validatedData.paid) {
         const creditCard = await CreditCard.findOne({
           _id: validatedData.creditCardId,
-          userId: authResult.user.userId,
+          userId: subscriptionResult.user.userId,
         });
 
         if (creditCard) {
@@ -279,7 +280,7 @@ export async function POST(request: NextRequest) {
           const debtMonth = validatedData.month || `${new Date(validatedData.dueDate).getFullYear()}-${String(new Date(validatedData.dueDate).getMonth() + 1).padStart(2, '0')}`;
           const hasAdjustment = await Debt.findOne({
             creditCardId: validatedData.creditCardId,
-            userId: authResult.user.userId,
+            userId: subscriptionResult.user.userId,
             month: debtMonth,
             description: { $regex: /Reajuste de Fatura/i },
             paid: false,

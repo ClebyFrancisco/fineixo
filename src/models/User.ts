@@ -27,6 +27,11 @@ const UserSchema = new Schema<IUser, UserModel>(
       minlength: [6, 'Senha deve ter no mínimo 6 caracteres'],
       select: false,
     },
+    stripeCustomerId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   {
     timestamps: true,
@@ -51,6 +56,7 @@ UserSchema.statics.comparePassword = async function (
 };
 
 export default mongoose.models.User || mongoose.model<IUser, UserModel>('User', UserSchema);
+
 
 
 

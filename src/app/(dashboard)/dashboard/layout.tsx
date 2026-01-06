@@ -2,23 +2,39 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import SubscriptionModal from '@/components/SubscriptionModal';
+import SubscriptionBanner from '@/components/SubscriptionBanner';
+import SubscriptionButton from '@/components/SubscriptionButton';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, loading, logout, user } = useAuth();
+  const { isAuthenticated, loading, logout, user, hasActiveSubscription } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isAuthenticated, loading, router]);
+
+  useEffect(() => {
+    // Show subscription modal if user is authenticated but doesn't have active subscription
+    // Only show once per session
+    if (!loading && isAuthenticated && !hasActiveSubscription && !showSubscriptionModal) {
+      const hasShownModal = sessionStorage.getItem('subscriptionModalShown');
+      if (!hasShownModal) {
+        setShowSubscriptionModal(true);
+        sessionStorage.setItem('subscriptionModalShown', 'true');
+      }
+    }
+  }, [loading, isAuthenticated, hasActiveSubscription, showSubscriptionModal]);
 
   if (loading) {
     return (
@@ -34,6 +50,7 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SubscriptionBanner />
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -116,8 +133,14 @@ export default function DashboardLayout({
                 </Link>
               </div>
             </div>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/dashboard/subscription"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Assinatura
+              </Link>
+              <span className="text-sm text-gray-700">
                 {user?.name}
               </span>
               <button
@@ -133,6 +156,11 @@ export default function DashboardLayout({
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {children}
       </main>
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
+      <SubscriptionButton />
     </div>
   );
 }

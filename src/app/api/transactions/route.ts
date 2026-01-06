@@ -4,6 +4,7 @@ import Transaction from '@/models/Transaction';
 import Account from '@/models/Account';
 import Wallet from '@/models/Wallet';
 import { authenticateRequest } from '@/middleware/auth';
+import { requireSubscription } from '@/middleware/subscription';
 import { z } from 'zod';
 
 const transactionSchema = z.object({
@@ -83,9 +84,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request);
-    if ('error' in authResult) {
-      return authResult.error;
+    const subscriptionResult = await requireSubscription(request);
+    if ('error' in subscriptionResult) {
+      return subscriptionResult.error;
     }
 
     await connectDB();
@@ -99,13 +100,13 @@ export async function POST(request: NextRequest) {
       // Buscar ou criar carteira padrão
       const Wallet = (await import('@/models/Wallet')).default;
       let wallet = await Wallet.findOne({
-        userId: authResult.user.userId,
+        userId: subscriptionResult.user.userId,
         name: 'Carteira Principal',
       });
 
       if (!wallet) {
         wallet = await Wallet.create({
-          userId: authResult.user.userId,
+          userId: subscriptionResult.user.userId,
           name: 'Carteira Principal',
           balance: 0,
         });
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const transaction = await Transaction.create({
       ...validatedData,
-      userId: authResult.user.userId,
+      userId: subscriptionResult.user.userId,
       walletId: walletId || validatedData.walletId,
       date: new Date(validatedData.date),
     });

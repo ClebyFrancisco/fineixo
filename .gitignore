@@ -35,6 +35,20 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# PM2
+logs/
+*.log
+ecosystem.config.js.bak
+# Note: ecosystem.config.js should be committed
+
+# deployment
+.DS_Store
+*.pem
+*.key
+*.crt
+
+
+
 
 
 

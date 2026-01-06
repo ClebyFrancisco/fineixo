@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import CreditCard from '@/models/CreditCard';
 import { authenticateRequest } from '@/middleware/auth';
+import { requireSubscription } from '@/middleware/subscription';
 import { z } from 'zod';
 
 const creditCardSchema = z.object({
@@ -37,9 +38,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await authenticateRequest(request);
-    if ('error' in authResult) {
-      return authResult.error;
+    const subscriptionResult = await requireSubscription(request);
+    if ('error' in subscriptionResult) {
+      return subscriptionResult.error;
     }
 
     await connectDB();
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const creditCard = await CreditCard.create({
       ...validatedData,
-      userId: authResult.user.userId,
+      userId: subscriptionResult.user.userId,
       availableLimit: validatedData.limit,
     });
 

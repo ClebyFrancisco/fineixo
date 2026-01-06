@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email: string;
   password: string;
+  stripeCustomerId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -9,6 +9,16 @@ interface User {
   email: string;
 }
 
+interface Subscription {
+  id: string;
+  status: string;
+  plan: 'monthly' | 'semiannual' | 'annual';
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  canceledAt?: Date;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -17,6 +27,9 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
+  hasActiveSubscription: boolean;
+  subscription: Subscription | null;
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,11 +38,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const data = await api.get<{ hasSubscription: boolean; isActive: boolean; subscription: Subscription | null }>('/subscriptions/status');
+      setSubscription(data.subscription);
+      setHasActiveSubscription(data.isActive);
+    } catch (error) {
+      console.error('Failed to fetch subscription:', error);
+      setSubscription(null);
+      setHasActiveSubscription(false);
+    }
+  }, []);
 
   const fetchUser = useCallback(async () => {
     try {
       const data = await api.get<{ user: User }>('/auth/me');
       setUser(data.user);
+      await fetchSubscription();
     } catch (error) {
       console.error('Failed to fetch user:', error);
       if (typeof window !== 'undefined') {
@@ -39,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchSubscription]);
 
   useEffect(() => {
     // Verificar se estamos no cliente
@@ -90,10 +118,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setToken(null);
     setUser(null);
+    setSubscription(null);
+    setHasActiveSubscription(false);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
     }
   };
+
+  const refreshSubscription = useCallback(async () => {
+    await fetchSubscription();
+  }, [fetchSubscription]);
 
   return (
     <AuthContext.Provider
@@ -105,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         loading,
         isAuthenticated: !!user,
+        hasActiveSubscription,
+        subscription,
+        refreshSubscription,
       }}
     >
       {children}
