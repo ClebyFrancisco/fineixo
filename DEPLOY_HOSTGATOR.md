@@ -30,7 +30,7 @@ Este projeto utiliza uma **arquitetura monolítica** onde o frontend e backend e
 ### Estrutura da Aplicação
 
 ```
-myFinanceApp/
+FineixoApp/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (auth)/            # Rotas de autenticação (login/register)
@@ -676,4 +676,5 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 ---
 
 **Última atualização**: 2024
+
 

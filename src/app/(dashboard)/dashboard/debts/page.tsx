@@ -223,7 +223,7 @@ export default function DebtsPage() {
         payload.month = formData.month;
       }
 
-      const response = await api.post('/debts', payload);
+      const response = await api.post<{ debt?: any; debts?: any[]; message?: string }>('/debts', payload);
       
       if (response.debts && response.debts.length > 1) {
         alert(`${response.debts.length} parcelas criadas com sucesso!`);

@@ -560,7 +560,7 @@ export default function AccountsPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      required={transactionFormData.type !== 'adjustment'}
+                      required
                       value={transactionFormData.amount}
                       onChange={(e) =>
                         setTransactionFormData({
@@ -598,7 +598,7 @@ export default function AccountsPage() {
                   />
                   {transactionFormData.type === 'transfer' && (
                     <p className="mt-1 text-xs text-gray-500">
-                      Se não informar, será usado "Transferência entre contas"
+                      Se não informar, será usado &quot;Transferência entre contas&quot;
                     </p>
                   )}
                   {transactionFormData.type === 'adjustment' && (

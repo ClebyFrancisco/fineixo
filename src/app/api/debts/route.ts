@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
             await creditCard.save();
           } else {
             // Se houver reajuste, recalcular o limite baseado no total do mês
-            await recalculateCreditCardLimit(creditCard, installmentMonth, authResult.user.userId);
+            await recalculateCreditCardLimit(creditCard, installmentMonth, subscriptionResult.user.userId);
           }
         }
       }
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest) {
       // Dívida única ou mensal
       const debtData: any = {
         ...validatedData,
-        userId: authResult.user.userId,
+        userId: subscriptionResult.user.userId,
         dueDate: new Date(validatedData.dueDate),
       };
 
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
 
           // Se for um reajuste, sempre recalcular o limite
           if (validatedData.description && validatedData.description.includes('Reajuste de Fatura')) {
-            await recalculateCreditCardLimit(creditCard, debtMonth, authResult.user.userId);
+            await recalculateCreditCardLimit(creditCard, debtMonth, subscriptionResult.user.userId);
           } else if (!hasAdjustment) {
             // Se não houver reajuste, diminuir o limite normalmente
             creditCard.availableLimit -= validatedData.amount;
@@ -303,7 +303,7 @@ export async function POST(request: NextRequest) {
             await creditCard.save();
           } else {
             // Se houver reajuste, recalcular o limite baseado no total do mês
-            await recalculateCreditCardLimit(creditCard, debtMonth, authResult.user.userId);
+            await recalculateCreditCardLimit(creditCard, debtMonth, subscriptionResult.user.userId);
           }
         }
       }

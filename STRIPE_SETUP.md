@@ -105,3 +105,4 @@ Para testar webhooks localmente durante o desenvolvimento:
 - Os preços podem ser ajustados no código em `src/components/SubscriptionModal.tsx`
 
 
+

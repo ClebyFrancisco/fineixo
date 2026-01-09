@@ -10,7 +10,7 @@ if (!JWT_SECRET || JWT_SECRET === 'your-secret-key-change-in-production') {
 
 export function generateToken(payload: JWTPayload): string {
   const options: SignOptions = {
-    expiresIn: JWT_EXPIRES_IN as string | number,
+    expiresIn: JWT_EXPIRES_IN as SignOptions['expiresIn'],
   };
   return jwt.sign(payload, JWT_SECRET, options);
 }

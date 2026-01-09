@@ -7,7 +7,7 @@ import { authenticateRequest } from '@/middleware/auth';
 import { z } from 'zod';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2023-10-16',
 });
 
 const checkoutSchema = z.object({
@@ -105,5 +105,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 

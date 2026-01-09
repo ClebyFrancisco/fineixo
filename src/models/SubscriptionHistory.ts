@@ -70,3 +70,4 @@ SubscriptionHistorySchema.index({ createdAt: -1 });
 export default mongoose.models.SubscriptionHistory || mongoose.model<ISubscriptionHistory>('SubscriptionHistory', SubscriptionHistorySchema);
 
 
+
