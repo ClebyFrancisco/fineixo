@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { api } from '@/services/api';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import MonthSelector from '@/components/MonthSelector';
+import { useEffect, useState } from "react";
+import { api } from "@/services/api";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import MonthSelector from "@/components/MonthSelector";
 
 interface Debt {
   _id: string;
   description: string;
   amount: number;
-  type: 'single' | 'monthly' | 'installment';
+  type: "single" | "monthly" | "installment";
   dueDate: string;
   paid: boolean;
   paidAt?: string;
@@ -25,90 +25,107 @@ export default function DebtsPage() {
   const [showModal, setShowModal] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
   });
-  const [categories, setCategories] = useState<Array<{ _id: string; name: string }>>([]);
-  const [creditCards, setCreditCards] = useState<Array<{ _id: string; name: string; bestPurchaseDay: number }>>([]);
+  const [categories, setCategories] = useState<
+    Array<{ _id: string; name: string }>
+  >([]);
+  const [creditCards, setCreditCards] = useState<
+    Array<{ _id: string; name: string; bestPurchaseDay: number }>
+  >([]);
   const [isCreditCardPurchase, setIsCreditCardPurchase] = useState(false);
   const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    type: 'single' as 'single' | 'monthly' | 'installment',
-    dueDate: '',
-    purchaseDate: '',
-    categoryId: '',
-    creditCardId: '',
-    accountId: '',
-    installments: { current: '1', total: '1' },
-    month: '',
+    description: "",
+    amount: "",
+    type: "single" as "single" | "monthly" | "installment",
+    dueDate: "",
+    purchaseDate: "",
+    categoryId: "",
+    creditCardId: "",
+    accountId: "",
+    installments: { current: "1", total: "1" },
+    month: "",
     isTotalAmount: false, // Se o valor informado é total ou parcela
-    installmentCount: '1', // Quantidade de parcelas
+    installmentCount: "1", // Quantidade de parcelas
   });
   const [submitting, setSubmitting] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
   const [payFormData, setPayFormData] = useState({
-    amount: '',
-    accountId: '',
-    walletId: '',
-    date: new Date().toISOString().split('T')[0],
+    amount: "",
+    accountId: "",
+    walletId: "",
+    date: new Date().toISOString().split("T")[0],
   });
-  const [accounts, setAccounts] = useState<Array<{ _id: string; name: string }>>([]);
-  const [wallets, setWallets] = useState<Array<{ _id: string; name: string }>>([]);
+  const [accounts, setAccounts] = useState<
+    Array<{ _id: string; name: string }>
+  >([]);
+  const [wallets, setWallets] = useState<Array<{ _id: string; name: string }>>(
+    []
+  );
   const [paying, setPaying] = useState(false);
-
-  useEffect(() => {
-    fetchDebts();
-    fetchCategories();
-    fetchCreditCards();
-    fetchAccounts();
-    fetchWallets();
-  }, []);
 
   const fetchAccounts = async () => {
     try {
-      const data = await api.get<{ accounts: Array<{ _id: string; name: string }> }>('/accounts');
+      const data = await api.get<{
+        accounts: Array<{ _id: string; name: string }>;
+      }>("/accounts");
       setAccounts(data.accounts);
     } catch (error) {
-      console.error('Error fetching accounts:', error);
+      console.error("Error fetching accounts:", error);
     }
   };
 
   const fetchWallets = async () => {
     try {
-      const data = await api.get<{ wallets: Array<{ _id: string; name: string }> }>('/wallets');
+      const data = await api.get<{
+        wallets: Array<{ _id: string; name: string }>;
+      }>("/wallets");
       setWallets(data.wallets);
     } catch (error) {
-      console.error('Error fetching wallets:', error);
+      console.error("Error fetching wallets:", error);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const data = await api.get<{ categories: Array<{ _id: string; name: string }> }>('/categories');
+      const data = await api.get<{
+        categories: Array<{ _id: string; name: string }>;
+      }>("/categories");
       setCategories(data.categories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   };
 
   const fetchCreditCards = async () => {
     try {
-      const data = await api.get<{ creditCards: Array<{ _id: string; name: string; bestPurchaseDay: number }> }>('/credit-cards');
+      const data = await api.get<{
+        creditCards: Array<{
+          _id: string;
+          name: string;
+          bestPurchaseDay: number;
+        }>;
+      }>("/credit-cards");
       setCreditCards(data.creditCards);
     } catch (error) {
-      console.error('Error fetching credit cards:', error);
+      console.error("Error fetching credit cards:", error);
     }
   };
 
   const handlePayDebt = (debt: Debt) => {
     setSelectedDebt(debt);
-    const remaining = debt.totalPaid ? debt.amount - debt.totalPaid : debt.amount;
+    const remaining = debt.totalPaid
+      ? debt.amount - debt.totalPaid
+      : debt.amount;
     setPayFormData({
       amount: remaining.toString(),
-      accountId: '',
-      walletId: '',
-      date: new Date().toISOString().split('T')[0],
+      accountId: "",
+      walletId: "",
+      date: new Date().toISOString().split("T")[0],
     });
     setShowPayModal(true);
   };
@@ -136,14 +153,14 @@ export default function DebtsPage() {
       setShowPayModal(false);
       setSelectedDebt(null);
       setPayFormData({
-        amount: '',
-        accountId: '',
-        walletId: '',
-        date: new Date().toISOString().split('T')[0],
+        amount: "",
+        accountId: "",
+        walletId: "",
+        date: new Date().toISOString().split("T")[0],
       });
       fetchDebts();
     } catch (error: any) {
-      alert(error.message || 'Erro ao processar pagamento');
+      alert(error.message || "Erro ao processar pagamento");
     } finally {
       setPaying(false);
     }
@@ -151,15 +168,18 @@ export default function DebtsPage() {
 
   const fetchDebts = async () => {
     try {
-      const data = await api.get<{ debts: Debt[] }>('/debts');
+      const data = await api.get<{ debts: Debt[] }>("/debts");
       // Buscar total pago para cada dívida
       const debtsWithPayments = await Promise.all(
         data.debts.map(async (debt) => {
           try {
-            const payments = await api.get<{ transactions: Array<{ amount: number }> }>(
-              `/transactions?debtId=${debt._id}`
+            const payments = await api.get<{
+              transactions: Array<{ amount: number }>;
+            }>(`/transactions?debtId=${debt._id}`);
+            const totalPaid = payments.transactions.reduce(
+              (sum, t) => sum + t.amount,
+              0
             );
-            const totalPaid = payments.transactions.reduce((sum, t) => sum + t.amount, 0);
             return { ...debt, totalPaid };
           } catch {
             return { ...debt, totalPaid: 0 };
@@ -168,7 +188,7 @@ export default function DebtsPage() {
       );
       setDebts(debtsWithPayments);
     } catch (error) {
-      console.error('Error fetching debts:', error);
+      console.error("Error fetching debts:", error);
     } finally {
       setLoading(false);
     }
@@ -191,14 +211,16 @@ export default function DebtsPage() {
           payload.purchaseDate = formData.purchaseDate;
           // Calcular dueDate baseado no dia de vencimento do cartão
           const purchaseDateObj = new Date(formData.purchaseDate);
-          const creditCard = creditCards.find(c => c._id === formData.creditCardId);
+          const creditCard = creditCards.find(
+            (c) => c._id === formData.creditCardId
+          );
           const dueDateObj = new Date(purchaseDateObj);
           dueDateObj.setMonth(dueDateObj.getMonth() + 1);
           // Ajustar para o dia de vencimento do cartão
           if (creditCard) {
             dueDateObj.setDate(creditCard.bestPurchaseDay);
           }
-          payload.dueDate = dueDateObj.toISOString().split('T')[0];
+          payload.dueDate = dueDateObj.toISOString().split("T")[0];
         } else {
           payload.dueDate = formData.dueDate;
         }
@@ -209,8 +231,8 @@ export default function DebtsPage() {
       if (formData.categoryId) payload.categoryId = formData.categoryId;
       if (formData.creditCardId) payload.creditCardId = formData.creditCardId;
       if (formData.accountId) payload.accountId = formData.accountId;
-      
-      if (formData.type === 'installment') {
+
+      if (formData.type === "installment") {
         payload.installmentCount = parseInt(formData.installmentCount);
         payload.isTotalAmount = formData.isTotalAmount;
         payload.installments = {
@@ -218,13 +240,17 @@ export default function DebtsPage() {
           total: parseInt(formData.installmentCount),
         };
       }
-      
-      if (formData.type === 'monthly' && formData.month) {
+
+      if (formData.type === "monthly" && formData.month) {
         payload.month = formData.month;
       }
 
-      const response = await api.post<{ debt?: any; debts?: any[]; message?: string }>('/debts', payload);
-      
+      const response = await api.post<{
+        debt?: any;
+        debts?: any[];
+        message?: string;
+      }>("/debts", payload);
+
       if (response.debts && response.debts.length > 1) {
         alert(`${response.debts.length} parcelas criadas com sucesso!`);
       }
@@ -232,26 +258,34 @@ export default function DebtsPage() {
       setShowModal(false);
       setIsCreditCardPurchase(false);
       setFormData({
-        description: '',
-        amount: '',
-        type: 'single',
-        dueDate: '',
-        purchaseDate: '',
-        categoryId: '',
-        creditCardId: '',
-        accountId: '',
-        installments: { current: '1', total: '1' },
-        month: '',
+        description: "",
+        amount: "",
+        type: "single",
+        dueDate: "",
+        purchaseDate: "",
+        categoryId: "",
+        creditCardId: "",
+        accountId: "",
+        installments: { current: "1", total: "1" },
+        month: "",
         isTotalAmount: false,
-        installmentCount: '1',
+        installmentCount: "1",
       });
       fetchDebts();
     } catch (error: any) {
-      alert(error.message || 'Erro ao criar dívida');
+      alert(error.message || "Erro ao criar dívida");
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    fetchDebts();
+    fetchCategories();
+    fetchCreditCards();
+    fetchAccounts();
+    fetchWallets();
+  }, []);
 
   if (loading) {
     return (
@@ -261,7 +295,60 @@ export default function DebtsPage() {
     );
   }
 
-  const totalDebts = debts.filter((d) => !d.paid).reduce((sum, d) => sum + d.amount, 0);
+  const totalDebts = debts
+    .filter((d) => !d.paid)
+    .reduce((sum, d) => sum + d.amount, 0);
+
+  const debtsToRender = (() => {
+    const filtered = debts.filter((debt) => {
+      const debtMonth = new Date(debt.dueDate).toISOString().slice(0, 7);
+      return debtMonth === currentMonth;
+    });
+
+    const grouped: Record<string, Debt & { debts?: Debt[] }> = {};
+    const result: Debt[] = [];
+
+    filtered.forEach((debt) => {
+      // Se NÃO for cartão, mantém normal
+      if (!debt.creditCardId) {
+        result.push(debt);
+        return;
+      }
+
+      const cardKey = debt.creditCardId.name;
+
+      if (!grouped[cardKey]) {
+        grouped[cardKey] = {
+          ...debt,
+          description: debt.creditCardId.name,
+          amount: 0,
+          totalPaid: 0,
+          paid: true,
+          debts: [],
+        };
+      }
+
+      grouped[cardKey].amount += debt.amount;
+      grouped[cardKey].totalPaid! += debt.totalPaid || 0;
+      grouped[cardKey].paid = grouped[cardKey].paid && debt.paid;
+
+      grouped[cardKey].debts!.push(debt);
+    });
+
+    return [...result, ...Object.values(grouped)];
+  })();
+
+  const isOverdue = (debt: Debt) => {
+    if (debt.paid) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dueDate = new Date(debt.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+
+    return dueDate < today;
+  };
 
   return (
     <div className="px-4 py-6 sm:px-0">
@@ -289,22 +376,31 @@ export default function DebtsPage() {
               Nenhuma dívida cadastrada ainda.
             </li>
           ) : (
-            debts.map((debt) => (
+            debtsToRender.map((debt) => (
               <li key={debt._id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center">
+                      {isOverdue(debt) && (
+                        <>
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-white">
+                            Vencida
+                          </span>
+                          <p> - </p>
+                        </>
+                      )}
                       <h3 className="text-sm font-medium text-gray-900">
                         {debt.description}
                       </h3>
+
                       {debt.categoryId && (
                         <span
                           className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                           style={{
                             backgroundColor: debt.categoryId.color
                               ? `${debt.categoryId.color}20`
-                              : '#f3f4f6',
-                            color: debt.categoryId.color || '#6b7280',
+                              : "#f3f4f6",
+                            color: debt.categoryId.color || "#6b7280",
                           }}
                         >
                           {debt.categoryId.name}
@@ -316,22 +412,28 @@ export default function DebtsPage() {
                         </span>
                       ) : debt.totalPaid && debt.totalPaid > 0 ? (
                         <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Pago Parcial ({formatCurrency(debt.totalPaid)} / {formatCurrency(debt.amount)})
+                          Pago Parcial ({formatCurrency(debt.totalPaid)} /{" "}
+                          {formatCurrency(debt.amount)})
                         </span>
                       ) : null}
                     </div>
                     <div className="mt-2 text-sm text-gray-500">
                       <span>Vencimento: {formatDate(debt.dueDate)}</span>
                       {debt.creditCardId && (
-                        <span className="ml-4">Cartão: {debt.creditCardId.name}</span>
+                        <span className="ml-4">
+                          Cartão: {debt.creditCardId.name}
+                        </span>
                       )}
                       {debt.installments && (
                         <span className="ml-4">
-                          Parcela {debt.installments.current}/{debt.installments.total}
+                          Parcela {debt.installments.current}/
+                          {debt.installments.total}
                         </span>
                       )}
                       {debt.paidAt && (
-                        <span className="ml-4">Pago em: {formatDate(debt.paidAt)}</span>
+                        <span className="ml-4">
+                          Pago em: {formatDate(debt.paidAt)}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -339,14 +441,15 @@ export default function DebtsPage() {
                     <div>
                       <span
                         className={`text-lg font-semibold ${
-                          debt.paid ? 'text-green-600' : 'text-red-600'
+                          debt.paid ? "text-green-600" : "text-red-600"
                         }`}
                       >
                         {formatCurrency(debt.amount)}
                       </span>
                       {debt.totalPaid && debt.totalPaid > 0 && !debt.paid && (
                         <p className="text-xs text-gray-500 mt-1">
-                          Restante: {formatCurrency(debt.amount - debt.totalPaid)}
+                          Restante:{" "}
+                          {formatCurrency(debt.amount - debt.totalPaid)}
                         </p>
                       )}
                     </div>
@@ -378,8 +481,11 @@ export default function DebtsPage() {
                 <p>Valor total: {formatCurrency(selectedDebt.amount)}</p>
                 {selectedDebt.totalPaid && selectedDebt.totalPaid > 0 && (
                   <p>
-                    Já pago: {formatCurrency(selectedDebt.totalPaid)} | Restante:{' '}
-                    {formatCurrency(selectedDebt.amount - selectedDebt.totalPaid)}
+                    Já pago: {formatCurrency(selectedDebt.totalPaid)} |
+                    Restante:{" "}
+                    {formatCurrency(
+                      selectedDebt.amount - selectedDebt.totalPaid
+                    )}
                   </p>
                 )}
               </div>
@@ -399,11 +505,13 @@ export default function DebtsPage() {
                     }
                     required
                     value={payFormData.amount}
-                    onChange={(e) => setPayFormData({ ...payFormData, amount: e.target.value })}
+                    onChange={(e) =>
+                      setPayFormData({ ...payFormData, amount: e.target.value })
+                    }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Você pode pagar parcial ou total. Máximo:{' '}
+                    Você pode pagar parcial ou total. Máximo:{" "}
                     {formatCurrency(
                       selectedDebt.totalPaid
                         ? selectedDebt.amount - selectedDebt.totalPaid
@@ -421,23 +529,27 @@ export default function DebtsPage() {
                         ? `account-${payFormData.accountId}`
                         : payFormData.walletId
                         ? `wallet-${payFormData.walletId}`
-                        : ''
+                        : ""
                     }
                     onChange={(e) => {
-                      if (e.target.value.startsWith('account-')) {
+                      if (e.target.value.startsWith("account-")) {
                         setPayFormData({
                           ...payFormData,
-                          accountId: e.target.value.replace('account-', ''),
-                          walletId: '',
+                          accountId: e.target.value.replace("account-", ""),
+                          walletId: "",
                         });
-                      } else if (e.target.value.startsWith('wallet-')) {
+                      } else if (e.target.value.startsWith("wallet-")) {
                         setPayFormData({
                           ...payFormData,
-                          walletId: e.target.value.replace('wallet-', ''),
-                          accountId: '',
+                          walletId: e.target.value.replace("wallet-", ""),
+                          accountId: "",
                         });
                       } else {
-                        setPayFormData({ ...payFormData, accountId: '', walletId: '' });
+                        setPayFormData({
+                          ...payFormData,
+                          accountId: "",
+                          walletId: "",
+                        });
                       }
                     }}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
@@ -449,7 +561,10 @@ export default function DebtsPage() {
                       </option>
                     ))}
                     {accounts.map((account) => (
-                      <option key={account._id} value={`account-${account._id}`}>
+                      <option
+                        key={account._id}
+                        value={`account-${account._id}`}
+                      >
                         Conta: {account.name}
                       </option>
                     ))}
@@ -463,7 +578,9 @@ export default function DebtsPage() {
                     type="date"
                     required
                     value={payFormData.date}
-                    onChange={(e) => setPayFormData({ ...payFormData, date: e.target.value })}
+                    onChange={(e) =>
+                      setPayFormData({ ...payFormData, date: e.target.value })
+                    }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
@@ -483,7 +600,7 @@ export default function DebtsPage() {
                     disabled={paying}
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
                   >
-                    {paying ? 'Processando...' : 'Pagar'}
+                    {paying ? "Processando..." : "Pagar"}
                   </button>
                 </div>
               </form>
@@ -509,7 +626,9 @@ export default function DebtsPage() {
                     type="text"
                     required
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     placeholder="Ex: Compra no supermercado"
                   />
@@ -538,7 +657,11 @@ export default function DebtsPage() {
                         checked={!isCreditCardPurchase}
                         onChange={(e) => {
                           setIsCreditCardPurchase(false);
-                          setFormData({ ...formData, creditCardId: '', purchaseDate: '' });
+                          setFormData({
+                            ...formData,
+                            creditCardId: "",
+                            purchaseDate: "",
+                          });
                         }}
                         className="mr-2"
                       />
@@ -553,7 +676,12 @@ export default function DebtsPage() {
                     </label>
                     <select
                       value={formData.creditCardId}
-                      onChange={(e) => setFormData({ ...formData, creditCardId: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          creditCardId: e.target.value,
+                        })
+                      }
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                       required
                     >
@@ -577,7 +705,9 @@ export default function DebtsPage() {
                       min="0"
                       required
                       value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
@@ -590,7 +720,12 @@ export default function DebtsPage() {
                         type="date"
                         required={isCreditCardPurchase}
                         value={formData.purchaseDate}
-                        onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            purchaseDate: e.target.value,
+                          })
+                        }
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                       />
                     </div>
@@ -603,7 +738,9 @@ export default function DebtsPage() {
                         type="date"
                         required={!isCreditCardPurchase}
                         value={formData.dueDate}
-                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, dueDate: e.target.value })
+                        }
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                       />
                     </div>
@@ -615,7 +752,9 @@ export default function DebtsPage() {
                   </label>
                   <select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value as any })
+                    }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                   >
                     <option value="single">Unitária</option>
@@ -623,7 +762,7 @@ export default function DebtsPage() {
                     <option value="installment">Parcelada</option>
                   </select>
                 </div>
-                {formData.type === 'monthly' && (
+                {formData.type === "monthly" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Mês (YYYY-MM)
@@ -631,12 +770,14 @@ export default function DebtsPage() {
                     <input
                       type="month"
                       value={formData.month}
-                      onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, month: e.target.value })
+                      }
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
                 )}
-                {formData.type === 'installment' && (
+                {formData.type === "installment" && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
@@ -652,7 +793,10 @@ export default function DebtsPage() {
                           setFormData({
                             ...formData,
                             installmentCount: count,
-                            installments: { ...formData.installments, total: count },
+                            installments: {
+                              ...formData.installments,
+                              total: count,
+                            },
                           });
                         }}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
@@ -667,7 +811,9 @@ export default function DebtsPage() {
                           <input
                             type="radio"
                             checked={!formData.isTotalAmount}
-                            onChange={(e) => setFormData({ ...formData, isTotalAmount: false })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, isTotalAmount: false })
+                            }
                             className="mr-2"
                           />
                           <span>Valor da Parcela</span>
@@ -676,7 +822,9 @@ export default function DebtsPage() {
                           <input
                             type="radio"
                             checked={formData.isTotalAmount}
-                            onChange={(e) => setFormData({ ...formData, isTotalAmount: true })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, isTotalAmount: true })
+                            }
                             className="mr-2"
                           />
                           <span>Valor Total</span>
@@ -684,8 +832,11 @@ export default function DebtsPage() {
                       </div>
                       {formData.isTotalAmount && formData.installmentCount && (
                         <p className="mt-2 text-sm text-gray-600">
-                          Cada parcela será de:{' '}
-                          {formatCurrency(parseFloat(formData.amount || '0') / parseInt(formData.installmentCount))}
+                          Cada parcela será de:{" "}
+                          {formatCurrency(
+                            parseFloat(formData.amount || "0") /
+                              parseInt(formData.installmentCount)
+                          )}
                         </p>
                       )}
                     </div>
@@ -700,7 +851,10 @@ export default function DebtsPage() {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            installments: { ...formData.installments, current: e.target.value },
+                            installments: {
+                              ...formData.installments,
+                              current: e.target.value,
+                            },
                           })
                         }
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
@@ -714,7 +868,9 @@ export default function DebtsPage() {
                   </label>
                   <select
                     value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, categoryId: e.target.value })
+                    }
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                   >
                     <option value="">Selecione...</option>
@@ -732,18 +888,18 @@ export default function DebtsPage() {
                       setShowModal(false);
                       setIsCreditCardPurchase(false);
                       setFormData({
-                        description: '',
-                        amount: '',
-                        type: 'single',
-                        dueDate: '',
-                        purchaseDate: '',
-                        categoryId: '',
-                        creditCardId: '',
-                        accountId: '',
-                        installments: { current: '1', total: '1' },
-                        month: '',
+                        description: "",
+                        amount: "",
+                        type: "single",
+                        dueDate: "",
+                        purchaseDate: "",
+                        categoryId: "",
+                        creditCardId: "",
+                        accountId: "",
+                        installments: { current: "1", total: "1" },
+                        month: "",
                         isTotalAmount: false,
-                        installmentCount: '1',
+                        installmentCount: "1",
                       });
                     }}
                     className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
@@ -755,7 +911,7 @@ export default function DebtsPage() {
                     disabled={submitting}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
                   >
-                    {submitting ? 'Salvando...' : 'Salvar'}
+                    {submitting ? "Salvando..." : "Salvar"}
                   </button>
                 </div>
               </form>
@@ -766,6 +922,3 @@ export default function DebtsPage() {
     </div>
   );
 }
-
-
-
