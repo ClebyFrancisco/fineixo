@@ -25,6 +25,13 @@ type CreditCardSummary = {
   availableLimit: number;
 };
 
+type AccountSummary = {
+  _id: string;
+  name: string;
+  balance: number;
+  bank: string;
+};
+
 export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalDebts: 0,
@@ -37,6 +44,8 @@ export default function DashboardPage() {
   const [showOverdueDetails, setShowOverdueDetails] = useState(false);
   const [creditCards, setCreditCards] = useState<CreditCardSummary[]>([]);
   const [showCardsDetails, setShowCardsDetails] = useState(false);
+  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
+  const [showAccountsDetails, setShowAccountsDetails] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -48,7 +57,7 @@ export default function DashboardPage() {
         await Promise.all([
           api.get<{ summary: { total: number } }>('/debts/summary'),
           api.get<{ creditCards: CreditCardSummary[] }>('/credit-cards'),
-          api.get<{ accounts: any[] }>('/accounts'),
+          api.get<{ accounts: AccountSummary[] }>('/accounts'),
           api.get<{ investments: any[] }>('/investments'),
           api.get<{ debts: Debt[] }>('/debts?paid=false'),
         ]);
@@ -61,6 +70,7 @@ export default function DashboardPage() {
       });
       setDebts(debtsRes.debts);
       setCreditCards(cardsRes.creditCards);
+      setAccounts(accountsRes.accounts);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -109,6 +119,11 @@ export default function DashboardPage() {
   const totalCardsAvailable = useMemo(
     () => creditCards.reduce((sum, c) => sum + c.availableLimit, 0),
     [creditCards]
+  );
+
+  const totalAccountsBalance = useMemo(
+    () => accounts.reduce((sum, acc) => sum + acc.balance, 0),
+    [accounts]
   );
 
   const currentMonthDebts = useMemo(
@@ -347,7 +362,11 @@ export default function DashboardPage() {
           </div>
         </button>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <button
+          type="button"
+          onClick={() => setShowAccountsDetails((prev) => !prev)}
+          className="bg-white overflow-hidden shadow rounded-lg text-left hover:shadow-md transition-shadow"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -358,16 +377,22 @@ export default function DashboardPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Contas Bancárias
+                    Contas Bancárias ({stats.totalAccounts})
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {stats.totalAccounts}
+                  <dd className="mt-1 text-xs text-gray-500">
+                    Saldo total:{' '}
+                    <span className="font-semibold text-gray-900">
+                      {formatCurrency(totalAccountsBalance)}
+                    </span>
+                  </dd>
+                  <dd className="mt-1 text-[11px] text-green-700">
+                    Clique para ver saldo por conta
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -524,6 +549,59 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-500">Disponível</p>
                       <p className="text-sm font-semibold text-green-600">
                         {formatCurrency(card.availableLimit)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showAccountsDetails && (
+        <div className="mt-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900">
+                Contas Bancárias - Saldos
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowAccountsDetails(false)}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {accounts.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Nenhuma conta bancária cadastrada.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {accounts.map((account) => (
+                  <div
+                    key={account._id}
+                    className="flex items-center justify-between border border-gray-100 rounded-md px-4 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {account.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{account.bank}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Saldo</p>
+                      <p
+                        className={`text-sm font-semibold ${
+                          account.balance >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}
+                      >
+                        {formatCurrency(account.balance)}
                       </p>
                     </div>
                   </div>
