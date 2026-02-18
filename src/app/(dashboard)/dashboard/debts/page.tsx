@@ -289,8 +289,8 @@ export default function DebtsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -354,14 +354,17 @@ export default function DebtsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dívidas</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Total não pago: {formatCurrency(totalDebts)}
+          <h1 className="text-3xl font-bold text-slate-100">Dívidas</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Total não pago:{" "}
+            <span className="font-semibold text-red-300">
+              {formatCurrency(totalDebts)}
+            </span>
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500"
         >
           Adicionar Dívida
         </button>
@@ -369,10 +372,10 @@ export default function DebtsPage() {
 
       <MonthSelector value={currentMonth} onChange={setCurrentMonth} />
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-slate-900/80 border border-white/10 shadow overflow-hidden sm:rounded-xl backdrop-blur">
+        <ul className="divide-y divide-slate-800">
           {debts.length === 0 ? (
-            <li className="px-6 py-4 text-center text-gray-500">
+            <li className="px-6 py-4 text-center text-slate-300">
               Nenhuma dívida cadastrada ainda.
             </li>
           ) : (
@@ -383,13 +386,13 @@ export default function DebtsPage() {
                     <div className="flex items-center">
                       {isOverdue(debt) && (
                         <>
-                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-white">
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-100">
                             Vencida
                           </span>
                           <p> - </p>
                         </>
                       )}
-                      <h3 className="text-sm font-medium text-gray-900">
+                      <h3 className="text-sm font-medium text-slate-100">
                         {debt.description}
                       </h3>
 
@@ -417,7 +420,7 @@ export default function DebtsPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-2 text-sm text-gray-500">
+                    <div className="mt-2 text-sm text-slate-400">
                       <span>Vencimento: {formatDate(debt.dueDate)}</span>
                       {debt.creditCardId && (
                         <span className="ml-4">
@@ -441,13 +444,13 @@ export default function DebtsPage() {
                     <div>
                       <span
                         className={`text-lg font-semibold ${
-                          debt.paid ? "text-green-600" : "text-red-600"
+                          debt.paid ? "text-emerald-300" : "text-red-300"
                         }`}
                       >
                         {formatCurrency(debt.amount)}
                       </span>
                       {debt.totalPaid && debt.totalPaid > 0 && !debt.paid && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                           Restante:{" "}
                           {formatCurrency(debt.amount - debt.totalPaid)}
                         </p>

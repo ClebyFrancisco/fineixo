@@ -98,8 +98,8 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -108,14 +108,14 @@ export default function CategoriesPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categorias</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-100">Categorias</h1>
+          <p className="mt-2 text-sm text-slate-300">
             Organize seus gastos por categorias
           </p>
         </div>
         <button
           onClick={handleOpenModal}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          className="px-4 py-2 bg-emerald-500 text-slate-950 rounded-md hover:bg-emerald-400"
         >
           Adicionar Categoria
         </button>
@@ -124,13 +124,13 @@ export default function CategoriesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-gray-500">Nenhuma categoria cadastrada ainda.</p>
+            <p className="text-slate-300">Nenhuma categoria cadastrada ainda.</p>
           </div>
         ) : (
           categories.map((category) => (
             <div
               key={category._id}
-              className="bg-white shadow rounded-lg p-6 flex items-center justify-between"
+              className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 flex items-center justify-between backdrop-blur"
             >
               <div className="flex items-center">
                 {category.color && (
@@ -139,7 +139,7 @@ export default function CategoriesPage() {
                     style={{ backgroundColor: category.color }}
                   ></div>
                 )}
-                <span className="text-lg font-medium text-gray-900">
+                <span className="text-lg font-medium text-slate-100">
                   {category.name}
                 </span>
               </div>

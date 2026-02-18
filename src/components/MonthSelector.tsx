@@ -47,24 +47,24 @@ export default function MonthSelector({ value, onChange }: MonthSelectorProps) {
     <div className="flex items-center justify-center space-x-4 mb-6">
       <button
         onClick={handlePrevious}
-        className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium"
+        className="px-3 py-1 rounded-md text-sm font-medium border border-slate-600 bg-slate-900/70 text-slate-100 hover:border-emerald-400 hover:bg-slate-900/90 transition-colors"
       >
         ← Anterior
       </button>
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 capitalize">
+        <h3 className="text-lg font-semibold text-slate-100 capitalize">
           {formatMonth(currentMonth)}
         </h3>
       </div>
       <button
         onClick={handleNext}
-        className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-md text-sm font-medium"
+        className="px-3 py-1 rounded-md text-sm font-medium border border-slate-600 bg-slate-900/70 text-slate-100 hover:border-emerald-400 hover:bg-slate-900/90 transition-colors"
       >
         Próximo →
       </button>
       <button
         onClick={handleToday}
-        className="px-3 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-sm font-medium"
+        className="px-3 py-1 rounded-md text-sm font-medium border border-emerald-500/60 bg-emerald-500 text-slate-950 hover:bg-emerald-400 hover:border-emerald-400 transition-colors"
       >
         Hoje
       </button>

@@ -145,8 +145,8 @@ export default function CreditCardsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -155,14 +155,14 @@ export default function CreditCardsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cartões de Crédito</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-100">Cartões de Crédito</h1>
+          <p className="mt-2 text-sm text-slate-300">
             Gerencie seus cartões de crédito
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-4 py-2 bg-emerald-500 text-slate-950 rounded-md hover:bg-emerald-400"
         >
           Adicionar Cartão
         </button>
@@ -171,11 +171,11 @@ export default function CreditCardsPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {creditCards.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-gray-500">Nenhum cartão cadastrado ainda.</p>
+            <p className="text-slate-300">Nenhum cartão cadastrado ainda.</p>
           </div>
         ) : (
           creditCards.map((card) => (
-            <div key={card._id} className="bg-white shadow rounded-lg p-6 relative">
+            <div key={card._id} className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 relative backdrop-blur">
               <div className="absolute top-4 right-4 flex space-x-2">
                 <button
                   onClick={() => handleEdit(card)}
@@ -218,38 +218,38 @@ export default function CreditCardsPage() {
                   </svg>
                 </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 pr-16">
+              <h3 className="text-lg font-semibold text-slate-100 mb-4 pr-16">
                 {card.name}
               </h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Limite Total:</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm text-slate-300">Limite Total:</span>
+                  <span className="text-sm font-medium text-slate-50">
                     {formatCurrency(card.limit)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Disponível:</span>
-                  <span className="text-sm font-medium text-green-600">
+                  <span className="text-sm text-slate-300">Disponível:</span>
+                  <span className="text-sm font-medium text-emerald-300">
                     {formatCurrency(card.availableLimit)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Melhor Dia:</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm text-slate-300">Melhor Dia:</span>
+                  <span className="text-sm font-medium text-slate-50">
                     Dia {card.bestPurchaseDay}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Vencimento:</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm text-slate-300">Vencimento:</span>
+                  <span className="text-sm font-medium text-slate-50">
                     Dia {card.dueDate !== undefined && card.dueDate !== null ? card.dueDate : (card.bestPurchaseDay || 10)}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <div className="w-full bg-slate-800 rounded-full h-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-emerald-400 h-2 rounded-full"
                       style={{
                         width: `${(card.availableLimit / card.limit) * 100}%`,
                       }}
@@ -259,7 +259,7 @@ export default function CreditCardsPage() {
                 <div className="mt-4">
                   <Link
                     href={`/dashboard/credit-cards/${card._id}/invoices`}
-                    className="block w-full text-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    className="block w-full text-center px-4 py-2 bg-emerald-500 text-slate-950 rounded-md hover:bg-emerald-400 transition-colors"
                   >
                     Ver Faturas
                   </Link>

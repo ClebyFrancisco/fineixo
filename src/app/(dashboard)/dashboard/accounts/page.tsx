@@ -258,8 +258,8 @@ export default function AccountsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -270,14 +270,21 @@ export default function AccountsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Contas Bancárias</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Saldo Total: {formatCurrency(totalBalance)}
+          <h1 className="text-3xl font-bold text-slate-100">Contas Bancárias</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Saldo Total:{" "}
+            <span
+              className={`font-semibold ${
+                totalBalance >= 0 ? "text-emerald-300" : "text-red-300"
+              }`}
+            >
+              {formatCurrency(totalBalance)}
+            </span>
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="px-4 py-2 bg-cyan-500 text-slate-950 rounded-md hover:bg-cyan-400"
         >
           Adicionar Conta
         </button>
@@ -286,19 +293,19 @@ export default function AccountsPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {accounts.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-gray-500">Nenhuma conta cadastrada ainda.</p>
+            <p className="text-slate-300">Nenhuma conta cadastrada ainda.</p>
           </div>
         ) : (
           accounts.map((account) => (
-            <div key={account._id} className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div key={account._id} className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
+              <h3 className="text-lg font-semibold text-slate-100 mb-2">
                 {account.name}
               </h3>
-              <p className="text-sm text-gray-500 mb-4">{account.bank}</p>
+              <p className="text-sm text-slate-400 mb-4">{account.bank}</p>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Tipo:</span>
-                  <span className="text-sm font-medium text-gray-900 capitalize">
+                  <span className="text-sm text-slate-300">Tipo:</span>
+                  <span className="text-sm font-medium text-slate-50 capitalize">
                     {account.type === 'checking'
                       ? 'Corrente'
                       : account.type === 'savings'
@@ -307,25 +314,25 @@ export default function AccountsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Saldo:</span>
+                  <span className="text-sm text-slate-300">Saldo:</span>
                   <span
                     className={`text-sm font-medium ${
-                      account.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                      account.balance >= 0 ? 'text-emerald-300' : 'text-red-300'
                     }`}
                   >
                     {formatCurrency(account.balance)}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t space-y-2">
+                <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
                   <button
                     onClick={() => handleAddTransaction(account)}
-                    className="w-full px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
+                    className="w-full px-4 py-2 bg-emerald-500 text-slate-950 text-sm rounded-md hover:bg-emerald-400"
                   >
                     Adicionar Transação
                   </button>
                   <button
                     onClick={() => handleViewTransactions(account)}
-                    className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    className="w-full px-4 py-2 bg-cyan-500 text-slate-950 text-sm rounded-md hover:bg-cyan-400"
                   >
                     Ver Transações
                   </button>

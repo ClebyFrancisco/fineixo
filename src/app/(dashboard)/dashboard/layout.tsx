@@ -44,8 +44,8 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -55,83 +55,87 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100">
       <SubscriptionBanner />
-      <nav className="bg-white shadow-sm">
+      <nav className="border-b border-white/10 bg-slate-900/80 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Fineixo</h1>
+                <h1 className="text-xl font-bold">
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    Fineixo
+                  </span>
+                </h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
                   href="/dashboard"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/dashboard/credit-cards"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/credit-cards"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Cartões
                 </Link>
                 <Link
                   href="/dashboard/debts"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/debts"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Dívidas
                 </Link>
                 <Link
                   href="/dashboard/categories"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/categories"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Categorias
                 </Link>
                 <Link
                   href="/dashboard/accounts"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/accounts"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Contas
                 </Link>
                 <Link
                   href="/dashboard/wallet"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/wallet"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Carteira
                 </Link>
                 <Link
                   href="/dashboard/transactions"
-                  className={`${
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === "/dashboard/transactions"
-                      ? "border-blue-500 text-gray-900"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      ? "border-emerald-400 text-slate-100"
+                      : "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                  }`}
                 >
                   Transações
                 </Link>
@@ -140,14 +144,14 @@ export default function DashboardLayout({
             <div className="flex items-center space-x-4">
               <Link
                 href="/dashboard/subscription"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
               >
                 Assinatura
               </Link>
-              <span className="text-sm text-gray-700">{user?.name}</span>
+              <span className="text-sm text-slate-200">{user?.name}</span>
               <button
                 onClick={logout}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-slate-400 hover:text-slate-100"
               >
                 Sair
               </button>

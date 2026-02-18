@@ -660,12 +660,14 @@ export default function CreditCardInvoicesPage() {
       <div className="mb-8">
         <button
           onClick={() => router.back()}
-          className="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
+          className="mb-4 text-sm font-medium text-emerald-300 hover:text-emerald-200"
         >
           ← Voltar para Cartões
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Faturas - {creditCard.name}</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-3xl font-bold text-slate-100">
+          Faturas - {creditCard.name}
+        </h1>
+        <p className="mt-2 text-sm text-slate-300">
           Visualize e gerencie as faturas deste cartão
         </p>
       </div>

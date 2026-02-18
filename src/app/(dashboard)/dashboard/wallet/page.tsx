@@ -119,8 +119,8 @@ export default function WalletPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -137,14 +137,21 @@ export default function WalletPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Carteira</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Saldo: {formatCurrency(wallet?.balance || 0)}
+          <h1 className="text-3xl font-bold text-slate-100">Carteira</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Saldo:{" "}
+            <span
+              className={`font-semibold ${
+                (wallet?.balance || 0) >= 0 ? "text-emerald-300" : "text-red-300"
+              }`}
+            >
+              {formatCurrency(wallet?.balance || 0)}
+            </span>
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          className="px-4 py-2 bg-emerald-500 text-slate-950 rounded-md hover:bg-emerald-400"
         >
           Nova Transação
         </button>
@@ -153,23 +160,23 @@ export default function WalletPage() {
       <MonthSelector value={currentMonth} onChange={setCurrentMonth} />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-500">Entradas</h3>
-          <p className="text-2xl font-bold text-green-600 mt-2">
+        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
+          <h3 className="text-sm font-medium text-slate-300">Entradas</h3>
+          <p className="text-2xl font-bold text-emerald-300 mt-2">
             {formatCurrency(totalIncome)}
           </p>
         </div>
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-500">Saídas</h3>
+        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
+          <h3 className="text-sm font-medium text-slate-300">Saídas</h3>
           <p className="text-2xl font-bold text-red-600 mt-2">
             {formatCurrency(totalExpense)}
           </p>
         </div>
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-500">Saldo do Mês</h3>
+        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
+          <h3 className="text-sm font-medium text-slate-300">Saldo do Mês</h3>
           <p
             className={`text-2xl font-bold mt-2 ${
-              balance >= 0 ? 'text-green-600' : 'text-red-600'
+              balance >= 0 ? 'text-emerald-300' : 'text-red-300'
             }`}
           >
             {formatCurrency(balance)}
@@ -177,10 +184,10 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-slate-900/80 border border-white/10 shadow overflow-hidden sm:rounded-xl backdrop-blur">
+        <ul className="divide-y divide-slate-800">
           {transactions.length === 0 ? (
-            <li className="px-6 py-4 text-center text-gray-500">
+            <li className="px-6 py-4 text-center text-slate-300">
               Nenhuma transação neste mês.
             </li>
           ) : (
@@ -192,8 +199,8 @@ export default function WalletPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           transaction.type === 'income'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-emerald-500/10 text-emerald-300'
+                            : 'bg-red-500/10 text-red-300'
                         }`}
                       >
                         {transaction.type === 'income' ? 'Entrada' : 'Saída'}
@@ -212,15 +219,15 @@ export default function WalletPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-gray-900">{transaction.description}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-slate-100">{transaction.description}</p>
+                    <p className="text-xs text-slate-400">
                       {new Date(transaction.date).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div className="ml-4">
                     <span
                       className={`text-lg font-semibold ${
-                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        transaction.type === 'income' ? 'text-emerald-300' : 'text-red-300'
                       }`}
                     >
                       {transaction.type === 'income' ? '+' : '-'}

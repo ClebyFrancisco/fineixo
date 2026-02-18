@@ -229,36 +229,37 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-6 sm:px-0">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Visão geral das suas finanças
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4 py-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-100">Dashboard</h1>
+          <p className="mt-2 text-sm text-slate-300">
+            Visão geral das suas finanças
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 text-xl">💰</span>
+                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-400 text-xl">💰</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Total de Dívidas
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-semibold text-slate-50">
                     {formatCurrency(stats.totalDebts)}
                   </dd>
                 </dl>
@@ -270,24 +271,24 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowOverdueDetails((prev) => !prev)}
-          className="bg-white overflow-hidden shadow rounded-lg text-left hover:shadow-md transition-shadow"
+          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-200 rounded-full flex items-center justify-center">
-                  <span className="text-red-700 text-xl">⏰</span>
+                <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-red-400 text-xl">⏰</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Total Atrasado (todos os meses)
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-semibold text-slate-50">
                     {formatCurrency(totalOverdue)}
                   </dd>
-                  <dd className="mt-1 text-xs text-red-600">
+                  <dd className="mt-1 text-xs text-red-300">
                     Clique para ver detalhes por mês
                   </dd>
                 </dl>
@@ -296,26 +297,26 @@ export default function DashboardPage() {
           </div>
         </button>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <span className="text-indigo-600 text-xl">📅</span>
+                <div className="w-8 h-8 bg-cyan-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-cyan-400 text-xl">📅</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Mês Atual - Resumo
                   </dt>
-                  <dd className="mt-1 text-xs text-gray-500">
+                  <dd className="mt-1 text-xs text-slate-300">
                     Total: {formatCurrency(currentMonthTotals.total)}
                   </dd>
-                  <dd className="mt-1 text-xs text-red-600">
+                  <dd className="mt-1 text-xs text-red-300">
                     Atrasado: {formatCurrency(currentMonthTotals.overdue)}
                   </dd>
-                  <dd className="mt-1 text-xs text-yellow-600">
+                  <dd className="mt-1 text-xs text-yellow-300">
                     Pendente: {formatCurrency(currentMonthTotals.pending)}
                   </dd>
                 </dl>
@@ -327,33 +328,33 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowCardsDetails((prev) => !prev)}
-          className="bg-white overflow-hidden shadow rounded-lg text-left hover:shadow-md transition-shadow"
+          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 text-xl">💳</span>
+                <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-blue-400 text-xl">💳</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Cartões de Crédito ({stats.totalCreditCards})
                   </dt>
-                  <dd className="mt-1 text-xs text-gray-500">
+                  <dd className="mt-1 text-xs text-slate-300">
                     Limite total:{' '}
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-slate-50">
                       {formatCurrency(totalCardsLimit)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-xs text-green-600">
+                  <dd className="mt-1 text-xs text-emerald-300">
                     Disponível:{' '}
                     <span className="font-semibold">
                       {formatCurrency(totalCardsAvailable)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-[11px] text-blue-600">
+                  <dd className="mt-1 text-[11px] text-blue-300">
                     Clique para ver limites por cartão
                   </dd>
                 </dl>
@@ -365,27 +366,27 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowAccountsDetails((prev) => !prev)}
-          className="bg-white overflow-hidden shadow rounded-lg text-left hover:shadow-md transition-shadow"
+          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xl">🏦</span>
+                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-400 text-xl">🏦</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Contas Bancárias ({stats.totalAccounts})
                   </dt>
-                  <dd className="mt-1 text-xs text-gray-500">
+                  <dd className="mt-1 text-xs text-slate-300">
                     Saldo total:{' '}
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-slate-50">
                       {formatCurrency(totalAccountsBalance)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-[11px] text-green-700">
+                  <dd className="mt-1 text-[11px] text-emerald-300">
                     Clique para ver saldo por conta
                   </dd>
                 </dl>
@@ -394,20 +395,20 @@ export default function DashboardPage() {
           </div>
         </button>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-600 text-xl">📈</span>
+                <div className="w-8 h-8 bg-yellow-500/10 rounded-full flex items-center justify-center">
+                  <span className="text-yellow-300 text-xl">📈</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-slate-300 truncate">
                     Investimentos
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg font-semibold text-slate-50">
                     {stats.totalInvestments}
                   </dd>
                 </dl>
@@ -419,22 +420,22 @@ export default function DashboardPage() {
 
       {showOverdueDetails && (
         <div className="mt-8">
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-semibold text-slate-100">
                 Dívidas em Atraso por Mês
               </h2>
               <button
                 type="button"
                 onClick={() => setShowOverdueDetails(false)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-slate-400 hover:text-slate-200"
               >
                 Fechar
               </button>
             </div>
 
             {overdueDebts.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-300">
                 No momento você não possui dívidas em atraso.
               </p>
             ) : (
@@ -451,14 +452,14 @@ export default function DashboardPage() {
                   return (
                     <div key={monthKey} className="mt-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-md font-semibold text-gray-800">
+                        <h3 className="text-md font-semibold text-slate-100">
                           {formatMonthLabel(monthKey)}
                         </h3>
-                        <span className="text-sm font-medium text-red-600">
+                        <span className="text-sm font-medium text-red-300">
                           {formatCurrency(monthTotal)}
                         </span>
                       </div>
-                      <ul className="divide-y divide-gray-200">
+                      <ul className="divide-y divide-slate-800">
                         {grouped.map((debt) => (
                           <li
                             key={debt._id}
@@ -466,33 +467,24 @@ export default function DashboardPage() {
                           >
                             <div>
                               <div className="flex items-center">
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="text-sm font-medium text-slate-100">
                                   {debt.description}
                                 </p>
-                                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-white">
+                                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-100">
                                   Vencida
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-slate-400">
                                 Vencimento: {formatDate(debt.dueDate)}
                               </p>
                               {debt.categoryId && (
-                                <span
-                                  className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                  style={{
-                                    backgroundColor: debt.categoryId.color
-                                      ? `${debt.categoryId.color}20`
-                                      : '#f3f4f6',
-                                    color:
-                                      debt.categoryId.color || '#6b7280',
-                                  }}
-                                >
+                                <span className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-100">
                                   {debt.categoryId.name}
                                 </span>
                               )}
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-red-600">
+                              <p className="text-sm font-semibold text-red-300">
                                 {formatCurrency(debt.amount)}
                               </p>
                             </div>
@@ -509,22 +501,22 @@ export default function DashboardPage() {
 
       {showCardsDetails && (
         <div className="mt-8">
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-semibold text-slate-100">
                 Cartões de Crédito - Limites
               </h2>
               <button
                 type="button"
                 onClick={() => setShowCardsDetails(false)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-slate-400 hover:text-slate-200"
               >
                 Fechar
               </button>
             </div>
 
             {creditCards.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-300">
                 Nenhum cartão de crédito cadastrado.
               </p>
             ) : (
@@ -532,22 +524,22 @@ export default function DashboardPage() {
                 {creditCards.map((card) => (
                   <div
                     key={card._id}
-                    className="flex items-center justify-between border border-gray-100 rounded-md px-4 py-2"
+                    className="flex items-center justify-between border border-slate-800 rounded-md px-4 py-2"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-100">
                         {card.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-400">
                         Limite:{' '}
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-slate-50">
                           {formatCurrency(card.limit)}
                         </span>
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">Disponível</p>
-                      <p className="text-sm font-semibold text-green-600">
+                      <p className="text-xs text-slate-400">Disponível</p>
+                      <p className="text-sm font-semibold text-emerald-300">
                         {formatCurrency(card.availableLimit)}
                       </p>
                     </div>
@@ -561,22 +553,22 @@ export default function DashboardPage() {
 
       {showAccountsDetails && (
         <div className="mt-8">
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-semibold text-slate-100">
                 Contas Bancárias - Saldos
               </h2>
               <button
                 type="button"
                 onClick={() => setShowAccountsDetails(false)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-slate-400 hover:text-slate-200"
               >
                 Fechar
               </button>
             </div>
 
             {accounts.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-300">
                 Nenhuma conta bancária cadastrada.
               </p>
             ) : (
@@ -584,21 +576,21 @@ export default function DashboardPage() {
                 {accounts.map((account) => (
                   <div
                     key={account._id}
-                    className="flex items-center justify-between border border-gray-100 rounded-md px-4 py-2"
+                    className="flex items-center justify-between border border-slate-800 rounded-md px-4 py-2"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-100">
                         {account.name}
                       </p>
-                      <p className="text-xs text-gray-500">{account.bank}</p>
+                      <p className="text-xs text-slate-400">{account.bank}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">Saldo</p>
+                      <p className="text-xs text-slate-400">Saldo</p>
                       <p
                         className={`text-sm font-semibold ${
                           account.balance >= 0
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-emerald-300'
+                            : 'text-red-300'
                         }`}
                       >
                         {formatCurrency(account.balance)}
@@ -614,26 +606,26 @@ export default function DashboardPage() {
 
       {/* Dívidas do mês atual - atrasadas e pendentes */}
       <div className="mt-8">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">
             Dívidas do Mês Atual ({formatMonthLabel(currentMonthKey)})
           </h2>
           {currentMonthDebts.length === 0 ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-300">
               Não há dívidas cadastradas para o mês atual.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-md font-semibold text-red-600 mb-2">
+                <h3 className="text-md font-semibold text-red-300 mb-2">
                   Atrasadas
                 </h3>
                 {currentMonthDebts.filter(isOverdue).length === 0 ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-300">
                     Nenhuma dívida atrasada neste mês.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-gray-200">
+                  <ul className="divide-y divide-slate-800">
                     {groupDebtsLikeDebtsPage(
                       currentMonthDebts.filter(isOverdue)
                     ).map((debt) => (
@@ -643,19 +635,19 @@ export default function DashboardPage() {
                       >
                         <div>
                           <div className="flex items-center">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-slate-100">
                               {debt.description}
                             </p>
-                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-white">
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-100">
                               Vencida
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-400">
                             Vencimento: {formatDate(debt.dueDate)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-red-600">
+                          <p className="text-sm font-semibold text-red-300">
                             {formatCurrency(debt.amount)}
                           </p>
                         </div>
@@ -665,15 +657,15 @@ export default function DashboardPage() {
                 )}
               </div>
               <div>
-                <h3 className="text-md font-semibold text-yellow-600 mb-2">
+                <h3 className="text-md font-semibold text-yellow-300 mb-2">
                   Pendentes (a vencer)
                 </h3>
                 {currentMonthDebts.filter((d) => !isOverdue(d)).length === 0 ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-300">
                     Nenhuma dívida pendente neste mês.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-gray-200">
+                  <ul className="divide-y divide-slate-800">
                     {groupDebtsLikeDebtsPage(
                       currentMonthDebts.filter((d) => !isOverdue(d))
                     ).map((debt) => (
@@ -682,15 +674,15 @@ export default function DashboardPage() {
                         className="py-2 flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-slate-100">
                             {debt.description}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-400">
                             Vencimento: {formatDate(debt.dueDate)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-yellow-600">
+                          <p className="text-sm font-semibold text-yellow-300">
                             {formatCurrency(debt.amount)}
                           </p>
                         </div>
@@ -705,37 +697,38 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">
             Ações Rápidas
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Link
               href="/dashboard/credit-cards"
-              className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              className="flex items-center justify-center px-4 py-2 border border-emerald-500/40 text-sm font-medium rounded-md text-slate-950 bg-emerald-400 hover:bg-emerald-300 hover:border-emerald-400 transition-colors"
             >
               Adicionar Cartão
             </Link>
             <Link
               href="/dashboard/debts"
-              className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              className="flex items-center justify-center px-4 py-2 border border-red-500/40 text-sm font-medium rounded-md text-slate-50 bg-red-600/90 hover:bg-red-500 transition-colors"
             >
               Adicionar Dívida
             </Link>
             <Link
               href="/dashboard/categories"
-              className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+              className="flex items-center justify-center px-4 py-2 border border-emerald-500/40 text-sm font-medium rounded-md text-slate-950 bg-emerald-400 hover:bg-emerald-300 hover:border-emerald-400 transition-colors"
             >
               Gerenciar Categorias
             </Link>
             <Link
               href="/dashboard/accounts"
-              className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+              className="flex items-center justify-center px-4 py-2 border border-cyan-500/40 text-sm font-medium rounded-md text-slate-950 bg-cyan-400 hover:bg-cyan-300 hover:border-cyan-400 transition-colors"
             >
               Adicionar Conta
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
