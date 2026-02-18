@@ -18,6 +18,13 @@ type Debt = {
 
 type DebtGroup = Debt & { debts?: Debt[] };
 
+type CreditCardSummary = {
+  _id: string;
+  name: string;
+  limit: number;
+  availableLimit: number;
+};
+
 export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalDebts: 0,
@@ -28,6 +35,8 @@ export default function DashboardPage() {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOverdueDetails, setShowOverdueDetails] = useState(false);
+  const [creditCards, setCreditCards] = useState<CreditCardSummary[]>([]);
+  const [showCardsDetails, setShowCardsDetails] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -38,7 +47,7 @@ export default function DashboardPage() {
       const [debtsSummaryRes, cardsRes, accountsRes, investmentsRes, debtsRes] =
         await Promise.all([
           api.get<{ summary: { total: number } }>('/debts/summary'),
-          api.get<{ creditCards: any[] }>('/credit-cards'),
+          api.get<{ creditCards: CreditCardSummary[] }>('/credit-cards'),
           api.get<{ accounts: any[] }>('/accounts'),
           api.get<{ investments: any[] }>('/investments'),
           api.get<{ debts: Debt[] }>('/debts?paid=false'),
@@ -51,6 +60,7 @@ export default function DashboardPage() {
         totalInvestments: investmentsRes.investments.length,
       });
       setDebts(debtsRes.debts);
+      setCreditCards(cardsRes.creditCards);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -89,6 +99,16 @@ export default function DashboardPage() {
   const totalOverdue = useMemo(
     () => overdueDebts.reduce((sum, d) => sum + d.amount, 0),
     [overdueDebts]
+  );
+
+  const totalCardsLimit = useMemo(
+    () => creditCards.reduce((sum, c) => sum + c.limit, 0),
+    [creditCards]
+  );
+
+  const totalCardsAvailable = useMemo(
+    () => creditCards.reduce((sum, c) => sum + c.availableLimit, 0),
+    [creditCards]
   );
 
   const currentMonthDebts = useMemo(
@@ -289,7 +309,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
+        <button
+          type="button"
+          onClick={() => setShowCardsDetails((prev) => !prev)}
+          className="bg-white overflow-hidden shadow rounded-lg text-left hover:shadow-md transition-shadow"
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -300,16 +324,28 @@ export default function DashboardPage() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Cartões de Crédito
+                    Cartões de Crédito ({stats.totalCreditCards})
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
-                    {stats.totalCreditCards}
+                  <dd className="mt-1 text-xs text-gray-500">
+                    Limite total:{' '}
+                    <span className="font-semibold text-gray-900">
+                      {formatCurrency(totalCardsLimit)}
+                    </span>
+                  </dd>
+                  <dd className="mt-1 text-xs text-green-600">
+                    Disponível:{' '}
+                    <span className="font-semibold">
+                      {formatCurrency(totalCardsAvailable)}
+                    </span>
+                  </dd>
+                  <dd className="mt-1 text-[11px] text-blue-600">
+                    Clique para ver limites por cartão
                   </dd>
                 </dl>
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -441,6 +477,58 @@ export default function DashboardPage() {
                     </div>
                   );
                 })
+            )}
+          </div>
+        </div>
+      )}
+
+      {showCardsDetails && (
+        <div className="mt-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900">
+                Cartões de Crédito - Limites
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowCardsDetails(false)}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {creditCards.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Nenhum cartão de crédito cadastrado.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {creditCards.map((card) => (
+                  <div
+                    key={card._id}
+                    className="flex items-center justify-between border border-gray-100 rounded-md px-4 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {card.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Limite:{' '}
+                        <span className="font-semibold text-gray-900">
+                          {formatCurrency(card.limit)}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Disponível</p>
+                      <p className="text-sm font-semibold text-green-600">
+                        {formatCurrency(card.availableLimit)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
