@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 
 interface MonthSelectorProps {
   value: string; // YYYY-MM
@@ -9,6 +10,8 @@ interface MonthSelectorProps {
 
 export default function MonthSelector({ value, onChange }: MonthSelectorProps) {
   const [currentMonth, setCurrentMonth] = useState(value);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     setCurrentMonth(value);
@@ -52,7 +55,11 @@ export default function MonthSelector({ value, onChange }: MonthSelectorProps) {
         ← Anterior
       </button>
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-slate-100 capitalize">
+        <h3
+          className={`text-lg font-semibold capitalize ${
+            isDark ? 'text-slate-100' : 'text-gray-900'
+          }`}
+        >
           {formatMonth(currentMonth)}
         </h3>
       </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
 import MonthSelector from '@/components/MonthSelector';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Wallet {
   _id: string;
@@ -37,6 +38,8 @@ export default function WalletPage() {
     date: new Date().toISOString().split('T')[0],
   });
   const [submitting, setSubmitting] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchWallet();
@@ -119,7 +122,13 @@ export default function WalletPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+            : 'bg-gray-50'
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -137,12 +146,28 @@ export default function WalletPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Carteira</h1>
-          <p className="mt-2 text-sm text-slate-300">
-            Saldo:{" "}
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
+            Carteira
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? 'text-slate-300' : 'text-gray-600'
+            }`}
+          >
+            Saldo:{' '}
             <span
               className={`font-semibold ${
-                (wallet?.balance || 0) >= 0 ? "text-emerald-300" : "text-red-300"
+                (wallet?.balance || 0) >= 0
+                  ? isDark
+                    ? 'text-emerald-300'
+                    : 'text-green-600'
+                  : isDark
+                  ? 'text-red-300'
+                  : 'text-red-600'
               }`}
             >
               {formatCurrency(wallet?.balance || 0)}
@@ -160,23 +185,65 @@ export default function WalletPage() {
       <MonthSelector value={currentMonth} onChange={setCurrentMonth} />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
-        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
-          <h3 className="text-sm font-medium text-slate-300">Entradas</h3>
+        <div
+          className={`shadow rounded-xl p-6 ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-100'
+          }`}
+        >
+          <h3
+            className={`text-sm font-medium ${
+              isDark ? 'text-slate-300' : 'text-gray-500'
+            }`}
+          >
+            Entradas
+          </h3>
           <p className="text-2xl font-bold text-emerald-300 mt-2">
             {formatCurrency(totalIncome)}
           </p>
         </div>
-        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
-          <h3 className="text-sm font-medium text-slate-300">Saídas</h3>
+        <div
+          className={`shadow rounded-xl p-6 ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-100'
+          }`}
+        >
+          <h3
+            className={`text-sm font-medium ${
+              isDark ? 'text-slate-300' : 'text-gray-500'
+            }`}
+          >
+            Saídas
+          </h3>
           <p className="text-2xl font-bold text-red-600 mt-2">
             {formatCurrency(totalExpense)}
           </p>
         </div>
-        <div className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
-          <h3 className="text-sm font-medium text-slate-300">Saldo do Mês</h3>
+        <div
+          className={`shadow rounded-xl p-6 ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-100'
+          }`}
+        >
+          <h3
+            className={`text-sm font-medium ${
+              isDark ? 'text-slate-300' : 'text-gray-500'
+            }`}
+          >
+            Saldo do Mês
+          </h3>
           <p
             className={`text-2xl font-bold mt-2 ${
-              balance >= 0 ? 'text-emerald-300' : 'text-red-300'
+              balance >= 0
+                ? isDark
+                  ? 'text-emerald-300'
+                  : 'text-green-600'
+                : isDark
+                ? 'text-red-300'
+                : 'text-red-600'
             }`}
           >
             {formatCurrency(balance)}
@@ -184,10 +251,24 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="bg-slate-900/80 border border-white/10 shadow overflow-hidden sm:rounded-xl backdrop-blur">
-        <ul className="divide-y divide-slate-800">
+      <div
+        className={`shadow overflow-hidden sm:rounded-xl ${
+          isDark
+            ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+            : 'bg-white border border-gray-200'
+        }`}
+      >
+        <ul
+          className={`divide-y ${
+            isDark ? 'divide-slate-800' : 'divide-gray-200'
+          }`}
+        >
           {transactions.length === 0 ? (
-            <li className="px-6 py-4 text-center text-slate-300">
+            <li
+              className={`px-6 py-4 text-center ${
+                isDark ? 'text-slate-300' : 'text-gray-500'
+              }`}
+            >
               Nenhuma transação neste mês.
             </li>
           ) : (
@@ -199,8 +280,12 @@ export default function WalletPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           transaction.type === 'income'
-                            ? 'bg-emerald-500/10 text-emerald-300'
-                            : 'bg-red-500/10 text-red-300'
+                            ? isDark
+                              ? 'bg-emerald-500/10 text-emerald-300'
+                              : 'bg-green-100 text-green-800'
+                            : isDark
+                            ? 'bg-red-500/10 text-red-300'
+                            : 'bg-red-100 text-red-800'
                         }`}
                       >
                         {transaction.type === 'income' ? 'Entrada' : 'Saída'}
@@ -219,15 +304,31 @@ export default function WalletPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-slate-100">{transaction.description}</p>
-                    <p className="text-xs text-slate-400">
+                    <p
+                      className={`mt-1 text-sm ${
+                        isDark ? 'text-slate-100' : 'text-gray-900'
+                      }`}
+                    >
+                      {transaction.description}
+                    </p>
+                    <p
+                      className={`text-xs ${
+                        isDark ? 'text-slate-400' : 'text-gray-500'
+                      }`}
+                    >
                       {new Date(transaction.date).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div className="ml-4">
                     <span
                       className={`text-lg font-semibold ${
-                        transaction.type === 'income' ? 'text-emerald-300' : 'text-red-300'
+                        transaction.type === 'income'
+                          ? isDark
+                            ? 'text-emerald-300'
+                            : 'text-green-600'
+                          : isDark
+                          ? 'text-red-300'
+                          : 'text-red-600'
                       }`}
                     >
                       {transaction.type === 'income' ? '+' : '-'}

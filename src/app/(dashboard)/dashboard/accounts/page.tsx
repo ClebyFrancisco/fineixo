@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import MonthSelector from '@/components/MonthSelector';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Account {
   _id: string;
@@ -49,6 +50,8 @@ export default function AccountsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submittingTransaction, setSubmittingTransaction] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchAccounts();
@@ -258,7 +261,13 @@ export default function AccountsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+            : 'bg-gray-50'
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -270,12 +279,28 @@ export default function AccountsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Contas Bancárias</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
+            Contas Bancárias
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? 'text-slate-300' : 'text-gray-600'
+            }`}
+          >
             Saldo Total:{" "}
             <span
               className={`font-semibold ${
-                totalBalance >= 0 ? "text-emerald-300" : "text-red-300"
+                totalBalance >= 0
+                  ? isDark
+                    ? 'text-emerald-300'
+                    : 'text-green-600'
+                  : isDark
+                  ? 'text-red-300'
+                  : 'text-red-600'
               }`}
             >
               {formatCurrency(totalBalance)}
@@ -293,19 +318,52 @@ export default function AccountsPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {accounts.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-slate-300">Nenhuma conta cadastrada ainda.</p>
+            <p
+              className={`${
+                isDark ? 'text-slate-300' : 'text-gray-500'
+              }`}
+            >
+              Nenhuma conta cadastrada ainda.
+            </p>
           </div>
         ) : (
           accounts.map((account) => (
-            <div key={account._id} className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 backdrop-blur">
-              <h3 className="text-lg font-semibold text-slate-100 mb-2">
+            <div
+              key={account._id}
+              className={`shadow rounded-xl p-6 backdrop-blur ${
+                isDark
+                  ? 'bg-slate-900/80 border border-white/10'
+                  : 'bg-white border border-gray-100'
+              }`}
+            >
+              <h3
+                className={`text-lg font-semibold mb-2 ${
+                  isDark ? 'text-slate-100' : 'text-gray-900'
+                }`}
+              >
                 {account.name}
               </h3>
-              <p className="text-sm text-slate-400 mb-4">{account.bank}</p>
+              <p
+                className={`text-sm mb-4 ${
+                  isDark ? 'text-slate-400' : 'text-gray-500'
+                }`}
+              >
+                {account.bank}
+              </p>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Tipo:</span>
-                  <span className="text-sm font-medium text-slate-50 capitalize">
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Tipo:
+                  </span>
+                  <span
+                    className={`text-sm font-medium capitalize ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     {account.type === 'checking'
                       ? 'Corrente'
                       : account.type === 'savings'
@@ -314,16 +372,32 @@ export default function AccountsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Saldo:</span>
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Saldo:
+                  </span>
                   <span
                     className={`text-sm font-medium ${
-                      account.balance >= 0 ? 'text-emerald-300' : 'text-red-300'
+                      account.balance >= 0
+                        ? isDark
+                          ? 'text-emerald-300'
+                          : 'text-green-600'
+                        : isDark
+                        ? 'text-red-300'
+                        : 'text-red-600'
                     }`}
                   >
                     {formatCurrency(account.balance)}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                <div
+                  className={`mt-4 pt-4 space-y-2 border-t ${
+                    isDark ? 'border-slate-800' : 'border-gray-200'
+                  }`}
+                >
                   <button
                     onClick={() => handleAddTransaction(account)}
                     className="w-full px-4 py-2 bg-emerald-500 text-slate-950 text-sm rounded-md hover:bg-emerald-400"

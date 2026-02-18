@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
+import { useTheme } from '@/hooks/useTheme';
 
 interface CreditCard {
   _id: string;
@@ -31,6 +32,8 @@ export default function CreditCardsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submittingEdit, setSubmittingEdit] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchCreditCards();
@@ -145,7 +148,13 @@ export default function CreditCardsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+            : 'bg-gray-50'
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -155,8 +164,18 @@ export default function CreditCardsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Cartões de Crédito</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
+            Cartões de Crédito
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? 'text-slate-300' : 'text-gray-600'
+            }`}
+          >
             Gerencie seus cartões de crédito
           </p>
         </div>
@@ -171,11 +190,24 @@ export default function CreditCardsPage() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {creditCards.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-slate-300">Nenhum cartão cadastrado ainda.</p>
+            <p
+              className={`${
+                isDark ? 'text-slate-300' : 'text-gray-500'
+              }`}
+            >
+              Nenhum cartão cadastrado ainda.
+            </p>
           </div>
         ) : (
           creditCards.map((card) => (
-            <div key={card._id} className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 relative backdrop-blur">
+            <div
+              key={card._id}
+              className={`shadow rounded-xl p-6 relative ${
+                isDark
+                  ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                  : 'bg-white border border-gray-100'
+              }`}
+            >
               <div className="absolute top-4 right-4 flex space-x-2">
                 <button
                   onClick={() => handleEdit(card)}
@@ -218,36 +250,84 @@ export default function CreditCardsPage() {
                   </svg>
                 </button>
               </div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-4 pr-16">
+              <h3
+                className={`text-lg font-semibold mb-4 pr-16 ${
+                  isDark ? 'text-slate-100' : 'text-gray-900'
+                }`}
+              >
                 {card.name}
               </h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Limite Total:</span>
-                  <span className="text-sm font-medium text-slate-50">
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Limite Total:
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     {formatCurrency(card.limit)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Disponível:</span>
-                  <span className="text-sm font-medium text-emerald-300">
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Disponível:
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      isDark ? 'text-emerald-300' : 'text-green-600'
+                    }`}
+                  >
                     {formatCurrency(card.availableLimit)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Melhor Dia:</span>
-                  <span className="text-sm font-medium text-slate-50">
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Melhor Dia:
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     Dia {card.bestPurchaseDay}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Vencimento:</span>
-                  <span className="text-sm font-medium text-slate-50">
+                  <span
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
+                    Vencimento:
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     Dia {card.dueDate !== undefined && card.dueDate !== null ? card.dueDate : (card.bestPurchaseDay || 10)}
                   </span>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-800">
-                  <div className="w-full bg-slate-800 rounded-full h-2">
+                  <div
+                    className={`w-full rounded-full h-2 ${
+                      isDark ? 'bg-slate-800' : 'bg-gray-200'
+                    }`}
+                  >
                     <div
                       className="bg-emerald-400 h-2 rounded-full"
                       style={{

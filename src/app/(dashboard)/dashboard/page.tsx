@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/services/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { useTheme } from '@/hooks/useTheme';
 
 type Debt = {
   _id: string;
@@ -46,6 +47,8 @@ export default function DashboardPage() {
   const [showCardsDetails, setShowCardsDetails] = useState(false);
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [showAccountsDetails, setShowAccountsDetails] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchStats();
@@ -229,37 +232,83 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+            : 'bg-gray-50'
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 px-4 py-8">
+    <div
+      className={`min-h-screen px-4 py-8 ${
+        isDark
+          ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+          : 'bg-gray-50'
+      }`}
+    >
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-100">Dashboard</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
+            Dashboard
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? 'text-slate-300' : 'text-gray-600'
+            }`}
+          >
             Visão geral das suas finanças
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
+          <div
+            className={`overflow-hidden shadow-lg rounded-xl ${
+              isDark
+                ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                : 'bg-white border border-gray-100'
+            }`}
+          >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-emerald-400 text-xl">💰</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-emerald-500/10' : 'bg-red-100'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-emerald-400' : 'text-red-600'
+                    }`}
+                  >
+                    💰
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Total de Dívidas
                   </dt>
-                  <dd className="text-lg font-semibold text-slate-50">
+                  <dd
+                    className={`text-lg font-semibold ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     {formatCurrency(stats.totalDebts)}
                   </dd>
                 </dl>
@@ -271,24 +320,50 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowOverdueDetails((prev) => !prev)}
-          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
+          className={`overflow-hidden shadow-lg rounded-xl text-left transition-all ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 hover:shadow-xl hover:border-emerald-400/60 backdrop-blur'
+              : 'bg-white border border-gray-100 hover:shadow-md'
+          }`}
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-red-400 text-xl">⏰</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-red-500/10' : 'bg-red-200'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-red-400' : 'text-red-700'
+                    }`}
+                  >
+                    ⏰
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Total Atrasado (todos os meses)
                   </dt>
-                  <dd className="text-lg font-semibold text-slate-50">
+                  <dd
+                    className={`text-lg font-semibold ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     {formatCurrency(totalOverdue)}
                   </dd>
-                  <dd className="mt-1 text-xs text-red-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-red-300' : 'text-red-600'
+                    }`}
+                  >
                     Clique para ver detalhes por mês
                   </dd>
                 </dl>
@@ -297,26 +372,58 @@ export default function DashboardPage() {
           </div>
         </button>
 
-        <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
+        <div
+          className={`overflow-hidden shadow-lg rounded-xl ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-100'
+          }`}
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-cyan-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-cyan-400 text-xl">📅</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-cyan-500/10' : 'bg-indigo-100'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-cyan-400' : 'text-indigo-600'
+                    }`}
+                  >
+                    📅
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Mês Atual - Resumo
                   </dt>
-                  <dd className="mt-1 text-xs text-slate-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Total: {formatCurrency(currentMonthTotals.total)}
                   </dd>
-                  <dd className="mt-1 text-xs text-red-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-red-300' : 'text-red-600'
+                    }`}
+                  >
                     Atrasado: {formatCurrency(currentMonthTotals.overdue)}
                   </dd>
-                  <dd className="mt-1 text-xs text-yellow-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-yellow-300' : 'text-yellow-600'
+                    }`}
+                  >
                     Pendente: {formatCurrency(currentMonthTotals.pending)}
                   </dd>
                 </dl>
@@ -328,33 +435,67 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowCardsDetails((prev) => !prev)}
-          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
+          className={`overflow-hidden shadow-lg rounded-xl text-left transition-all ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 hover:shadow-xl hover:border-emerald-400/60 backdrop-blur'
+              : 'bg-white border border-gray-100 hover:shadow-md'
+          }`}
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-blue-400 text-xl">💳</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-blue-500/10' : 'bg-blue-100'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-blue-400' : 'text-blue-600'
+                    }`}
+                  >
+                    💳
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Cartões de Crédito ({stats.totalCreditCards})
                   </dt>
-                  <dd className="mt-1 text-xs text-slate-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Limite total:{' '}
-                    <span className="font-semibold text-slate-50">
+                    <span
+                      className={`font-semibold ${
+                        isDark ? 'text-slate-50' : 'text-gray-900'
+                      }`}
+                    >
                       {formatCurrency(totalCardsLimit)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-xs text-emerald-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-emerald-300' : 'text-green-600'
+                    }`}
+                  >
                     Disponível:{' '}
                     <span className="font-semibold">
                       {formatCurrency(totalCardsAvailable)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-[11px] text-blue-300">
+                  <dd
+                    className={`mt-1 text-[11px] ${
+                      isDark ? 'text-blue-300' : 'text-blue-600'
+                    }`}
+                  >
                     Clique para ver limites por cartão
                   </dd>
                 </dl>
@@ -366,27 +507,57 @@ export default function DashboardPage() {
         <button
           type="button"
           onClick={() => setShowAccountsDetails((prev) => !prev)}
-          className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl text-left hover:shadow-xl hover:border-emerald-400/60 transition-all backdrop-blur"
+          className={`overflow-hidden shadow-lg rounded-xl text-left transition-all ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 hover:shadow-xl hover:border-emerald-400/60 backdrop-blur'
+              : 'bg-white border border-gray-100 hover:shadow-md'
+          }`}
         >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-emerald-400 text-xl">🏦</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-emerald-500/10' : 'bg-green-100'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-emerald-400' : 'text-green-600'
+                    }`}
+                  >
+                    🏦
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Contas Bancárias ({stats.totalAccounts})
                   </dt>
-                  <dd className="mt-1 text-xs text-slate-300">
+                  <dd
+                    className={`mt-1 text-xs ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Saldo total:{' '}
-                    <span className="font-semibold text-slate-50">
+                    <span
+                      className={`font-semibold ${
+                        isDark ? 'text-slate-50' : 'text-gray-900'
+                      }`}
+                    >
                       {formatCurrency(totalAccountsBalance)}
                     </span>
                   </dd>
-                  <dd className="mt-1 text-[11px] text-emerald-300">
+                  <dd
+                    className={`mt-1 text-[11px] ${
+                      isDark ? 'text-emerald-300' : 'text-green-700'
+                    }`}
+                  >
                     Clique para ver saldo por conta
                   </dd>
                 </dl>
@@ -395,20 +566,44 @@ export default function DashboardPage() {
           </div>
         </button>
 
-        <div className="bg-slate-900/80 border border-white/10 overflow-hidden shadow-lg rounded-xl backdrop-blur">
+        <div
+          className={`overflow-hidden shadow-lg rounded-xl ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-100'
+          }`}
+        >
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-500/10 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-300 text-xl">📈</span>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDark ? 'bg-yellow-500/10' : 'bg-yellow-100'
+                  }`}
+                >
+                  <span
+                    className={`text-xl ${
+                      isDark ? 'text-yellow-300' : 'text-yellow-600'
+                    }`}
+                  >
+                    📈
+                  </span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-slate-300 truncate">
+                  <dt
+                    className={`text-sm font-medium truncate ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Investimentos
                   </dt>
-                  <dd className="text-lg font-semibold text-slate-50">
+                  <dd
+                    className={`text-lg font-semibold ${
+                      isDark ? 'text-slate-50' : 'text-gray-900'
+                    }`}
+                  >
                     {stats.totalInvestments}
                   </dd>
                 </dl>
@@ -420,22 +615,40 @@ export default function DashboardPage() {
 
       {showOverdueDetails && (
         <div className="mt-8">
-          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
+          <div
+            className={`shadow-lg rounded-xl p-6 ${
+              isDark
+                ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                : 'bg-white border border-gray-200'
+            }`}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">
+              <h2
+                className={`text-lg font-semibold ${
+                  isDark ? 'text-slate-100' : 'text-gray-900'
+                }`}
+              >
                 Dívidas em Atraso por Mês
               </h2>
               <button
                 type="button"
                 onClick={() => setShowOverdueDetails(false)}
-                className="text-sm text-slate-400 hover:text-slate-200"
+                className={`text-sm ${
+                  isDark
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 Fechar
               </button>
             </div>
 
             {overdueDebts.length === 0 ? (
-              <p className="text-sm text-slate-300">
+              <p
+                className={`text-sm ${
+                  isDark ? 'text-slate-300' : 'text-gray-500'
+                }`}
+              >
                 No momento você não possui dívidas em atraso.
               </p>
             ) : (
@@ -452,14 +665,26 @@ export default function DashboardPage() {
                   return (
                     <div key={monthKey} className="mt-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-md font-semibold text-slate-100">
+                        <h3
+                          className={`text-md font-semibold ${
+                            isDark ? 'text-slate-100' : 'text-gray-800'
+                          }`}
+                        >
                           {formatMonthLabel(monthKey)}
                         </h3>
-                        <span className="text-sm font-medium text-red-300">
+                        <span
+                          className={`text-sm font-medium ${
+                            isDark ? 'text-red-300' : 'text-red-600'
+                          }`}
+                        >
                           {formatCurrency(monthTotal)}
                         </span>
                       </div>
-                      <ul className="divide-y divide-slate-800">
+                      <ul
+                        className={`divide-y ${
+                          isDark ? 'divide-slate-800' : 'divide-gray-200'
+                        }`}
+                      >
                         {grouped.map((debt) => (
                           <li
                             key={debt._id}
@@ -467,14 +692,22 @@ export default function DashboardPage() {
                           >
                             <div>
                               <div className="flex items-center">
-                                <p className="text-sm font-medium text-slate-100">
+                                <p
+                                  className={`text-sm font-medium ${
+                                    isDark ? 'text-slate-100' : 'text-gray-900'
+                                  }`}
+                                >
                                   {debt.description}
                                 </p>
                                 <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-100">
                                   Vencida
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400">
+                              <p
+                                className={`text-xs ${
+                                  isDark ? 'text-slate-400' : 'text-gray-500'
+                                }`}
+                              >
                                 Vencimento: {formatDate(debt.dueDate)}
                               </p>
                               {debt.categoryId && (
@@ -484,7 +717,11 @@ export default function DashboardPage() {
                               )}
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-red-300">
+                              <p
+                                className={`text-sm font-semibold ${
+                                  isDark ? 'text-red-300' : 'text-red-600'
+                                }`}
+                              >
                                 {formatCurrency(debt.amount)}
                               </p>
                             </div>
@@ -501,22 +738,40 @@ export default function DashboardPage() {
 
       {showCardsDetails && (
         <div className="mt-8">
-          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
+          <div
+            className={`shadow-lg rounded-xl p-6 ${
+              isDark
+                ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                : 'bg-white border border-gray-200'
+            }`}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">
+              <h2
+                className={`text-lg font-semibold ${
+                  isDark ? 'text-slate-100' : 'text-gray-900'
+                }`}
+              >
                 Cartões de Crédito - Limites
               </h2>
               <button
                 type="button"
                 onClick={() => setShowCardsDetails(false)}
-                className="text-sm text-slate-400 hover:text-slate-200"
+                className={`text-sm ${
+                  isDark
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 Fechar
               </button>
             </div>
 
             {creditCards.length === 0 ? (
-              <p className="text-sm text-slate-300">
+              <p
+                className={`text-sm ${
+                  isDark ? 'text-slate-300' : 'text-gray-500'
+                }`}
+              >
                 Nenhum cartão de crédito cadastrado.
               </p>
             ) : (
@@ -524,22 +779,46 @@ export default function DashboardPage() {
                 {creditCards.map((card) => (
                   <div
                     key={card._id}
-                    className="flex items-center justify-between border border-slate-800 rounded-md px-4 py-2"
+                    className={`flex items-center justify-between rounded-md px-4 py-2 border ${
+                      isDark ? 'border-slate-800' : 'border-gray-100'
+                    }`}
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-100">
+                      <p
+                        className={`text-sm font-medium ${
+                          isDark ? 'text-slate-100' : 'text-gray-900'
+                        }`}
+                      >
                         {card.name}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p
+                        className={`text-xs ${
+                          isDark ? 'text-slate-400' : 'text-gray-500'
+                        }`}
+                      >
                         Limite:{' '}
-                        <span className="font-semibold text-slate-50">
+                        <span
+                          className={`font-semibold ${
+                            isDark ? 'text-slate-50' : 'text-gray-900'
+                          }`}
+                        >
                           {formatCurrency(card.limit)}
                         </span>
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Disponível</p>
-                      <p className="text-sm font-semibold text-emerald-300">
+                      <p
+                        className={`text-xs ${
+                          isDark ? 'text-slate-400' : 'text-gray-500'
+                        }`}
+                      >
+                        Disponível
+                      </p>
+                      <p
+                        className={`text-sm font-semibold ${
+                          isDark ? 'text-emerald-300' : 'text-green-600'
+                        }`}
+                      >
                         {formatCurrency(card.availableLimit)}
                       </p>
                     </div>
@@ -553,22 +832,40 @@ export default function DashboardPage() {
 
       {showAccountsDetails && (
         <div className="mt-8">
-          <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
+          <div
+            className={`shadow-lg rounded-xl p-6 ${
+              isDark
+                ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                : 'bg-white border border-gray-200'
+            }`}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">
+              <h2
+                className={`text-lg font-semibold ${
+                  isDark ? 'text-slate-100' : 'text-gray-900'
+                }`}
+              >
                 Contas Bancárias - Saldos
               </h2>
               <button
                 type="button"
                 onClick={() => setShowAccountsDetails(false)}
-                className="text-sm text-slate-400 hover:text-slate-200"
+                className={`text-sm ${
+                  isDark
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 Fechar
               </button>
             </div>
 
             {accounts.length === 0 ? (
-              <p className="text-sm text-slate-300">
+              <p
+                className={`text-sm ${
+                  isDark ? 'text-slate-300' : 'text-gray-500'
+                }`}
+              >
                 Nenhuma conta bancária cadastrada.
               </p>
             ) : (
@@ -576,21 +873,43 @@ export default function DashboardPage() {
                 {accounts.map((account) => (
                   <div
                     key={account._id}
-                    className="flex items-center justify-between border border-slate-800 rounded-md px-4 py-2"
+                    className={`flex items-center justify-between rounded-md px-4 py-2 border ${
+                      isDark ? 'border-slate-800' : 'border-gray-100'
+                    }`}
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-100">
+                      <p
+                        className={`text-sm font-medium ${
+                          isDark ? 'text-slate-100' : 'text-gray-900'
+                        }`}
+                      >
                         {account.name}
                       </p>
-                      <p className="text-xs text-slate-400">{account.bank}</p>
+                      <p
+                        className={`text-xs ${
+                          isDark ? 'text-slate-400' : 'text-gray-500'
+                        }`}
+                      >
+                        {account.bank}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Saldo</p>
+                      <p
+                        className={`text-xs ${
+                          isDark ? 'text-slate-400' : 'text-gray-500'
+                        }`}
+                      >
+                        Saldo
+                      </p>
                       <p
                         className={`text-sm font-semibold ${
                           account.balance >= 0
-                            ? 'text-emerald-300'
-                            : 'text-red-300'
+                            ? isDark
+                              ? 'text-emerald-300'
+                              : 'text-green-600'
+                            : isDark
+                            ? 'text-red-300'
+                            : 'text-red-600'
                         }`}
                       >
                         {formatCurrency(account.balance)}
@@ -606,26 +925,52 @@ export default function DashboardPage() {
 
       {/* Dívidas do mês atual - atrasadas e pendentes */}
       <div className="mt-8">
-        <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">
+        <div
+          className={`shadow-lg rounded-xl p-6 ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-200'
+          }`}
+        >
+          <h2
+            className={`text-lg font-semibold mb-4 ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
             Dívidas do Mês Atual ({formatMonthLabel(currentMonthKey)})
           </h2>
           {currentMonthDebts.length === 0 ? (
-            <p className="text-sm text-slate-300">
+            <p
+              className={`text-sm ${
+                isDark ? 'text-slate-300' : 'text-gray-500'
+              }`}
+            >
               Não há dívidas cadastradas para o mês atual.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-md font-semibold text-red-300 mb-2">
+                <h3
+                  className={`text-md font-semibold mb-2 ${
+                    isDark ? 'text-red-300' : 'text-red-600'
+                  }`}
+                >
                   Atrasadas
                 </h3>
                 {currentMonthDebts.filter(isOverdue).length === 0 ? (
-                  <p className="text-sm text-slate-300">
+                  <p
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Nenhuma dívida atrasada neste mês.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-slate-800">
+                  <ul
+                    className={`divide-y ${
+                      isDark ? 'divide-slate-800' : 'divide-gray-200'
+                    }`}
+                  >
                     {groupDebtsLikeDebtsPage(
                       currentMonthDebts.filter(isOverdue)
                     ).map((debt) => (
@@ -635,19 +980,31 @@ export default function DashboardPage() {
                       >
                         <div>
                           <div className="flex items-center">
-                            <p className="text-sm font-medium text-slate-100">
+                            <p
+                              className={`text-sm font-medium ${
+                                isDark ? 'text-slate-100' : 'text-gray-900'
+                              }`}
+                            >
                               {debt.description}
                             </p>
                             <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-100">
                               Vencida
                             </span>
                           </div>
-                          <p className="text-xs text-slate-400">
+                          <p
+                            className={`text-xs ${
+                              isDark ? 'text-slate-400' : 'text-gray-500'
+                            }`}
+                          >
                             Vencimento: {formatDate(debt.dueDate)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-red-300">
+                          <p
+                            className={`text-sm font-semibold ${
+                              isDark ? 'text-red-300' : 'text-red-600'
+                            }`}
+                          >
                             {formatCurrency(debt.amount)}
                           </p>
                         </div>
@@ -657,15 +1014,27 @@ export default function DashboardPage() {
                 )}
               </div>
               <div>
-                <h3 className="text-md font-semibold text-yellow-300 mb-2">
+                <h3
+                  className={`text-md font-semibold mb-2 ${
+                    isDark ? 'text-yellow-300' : 'text-yellow-600'
+                  }`}
+                >
                   Pendentes (a vencer)
                 </h3>
                 {currentMonthDebts.filter((d) => !isOverdue(d)).length === 0 ? (
-                  <p className="text-sm text-slate-300">
+                  <p
+                    className={`text-sm ${
+                      isDark ? 'text-slate-300' : 'text-gray-500'
+                    }`}
+                  >
                     Nenhuma dívida pendente neste mês.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-slate-800">
+                  <ul
+                    className={`divide-y ${
+                      isDark ? 'divide-slate-800' : 'divide-gray-200'
+                    }`}
+                  >
                     {groupDebtsLikeDebtsPage(
                       currentMonthDebts.filter((d) => !isOverdue(d))
                     ).map((debt) => (
@@ -674,15 +1043,27 @@ export default function DashboardPage() {
                         className="py-2 flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-sm font-medium text-slate-100">
+                          <p
+                            className={`text-sm font-medium ${
+                              isDark ? 'text-slate-100' : 'text-gray-900'
+                            }`}
+                          >
                             {debt.description}
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p
+                            className={`text-xs ${
+                              isDark ? 'text-slate-400' : 'text-gray-500'
+                            }`}
+                          >
                             Vencimento: {formatDate(debt.dueDate)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-yellow-300">
+                          <p
+                            className={`text-sm font-semibold ${
+                              isDark ? 'text-yellow-300' : 'text-yellow-600'
+                            }`}
+                          >
                             {formatCurrency(debt.amount)}
                           </p>
                         </div>
@@ -697,8 +1078,18 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8">
-        <div className="bg-slate-900/80 border border-white/10 shadow-lg rounded-xl p-6 backdrop-blur">
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">
+        <div
+          className={`shadow-lg rounded-xl p-6 ${
+            isDark
+              ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+              : 'bg-white border border-gray-200'
+          }`}
+        >
+          <h2
+            className={`text-lg font-semibold mb-4 ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
             Ações Rápidas
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

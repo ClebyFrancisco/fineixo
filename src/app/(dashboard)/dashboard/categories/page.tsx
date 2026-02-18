@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Category {
   _id: string;
@@ -19,6 +20,8 @@ export default function CategoriesPage() {
     color: '#3B82F6',
   });
   const [submitting, setSubmitting] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchCategories();
@@ -98,7 +101,13 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900'
+            : 'bg-gray-50'
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -108,8 +117,18 @@ export default function CategoriesPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Categorias</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? 'text-slate-100' : 'text-gray-900'
+            }`}
+          >
+            Categorias
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? 'text-slate-300' : 'text-gray-600'
+            }`}
+          >
             Organize seus gastos por categorias
           </p>
         </div>
@@ -124,13 +143,23 @@ export default function CategoriesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <p className="text-slate-300">Nenhuma categoria cadastrada ainda.</p>
+            <p
+              className={`${
+                isDark ? 'text-slate-300' : 'text-gray-500'
+              }`}
+            >
+              Nenhuma categoria cadastrada ainda.
+            </p>
           </div>
         ) : (
           categories.map((category) => (
             <div
               key={category._id}
-              className="bg-slate-900/80 border border-white/10 shadow rounded-xl p-6 flex items-center justify-between backdrop-blur"
+              className={`shadow rounded-xl p-6 flex items-center justify-between ${
+                isDark
+                  ? 'bg-slate-900/80 border border-white/10 backdrop-blur'
+                  : 'bg-white border border-gray-100'
+              }`}
             >
               <div className="flex items-center">
                 {category.color && (
@@ -139,7 +168,11 @@ export default function CategoriesPage() {
                     style={{ backgroundColor: category.color }}
                   ></div>
                 )}
-                <span className="text-lg font-medium text-slate-100">
+                <span
+                  className={`text-lg font-medium ${
+                    isDark ? 'text-slate-100' : 'text-gray-900'
+                  }`}
+                >
                   {category.name}
                 </span>
               </div>

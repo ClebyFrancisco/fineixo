@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/services/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import MonthSelector from "@/components/MonthSelector";
+import { useTheme } from "@/hooks/useTheme";
 
 interface Debt {
   _id: string;
@@ -27,7 +28,7 @@ export default function DebtsPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
-      "0"
+      "0",
     )}`;
   });
   const [categories, setCategories] = useState<
@@ -64,9 +65,11 @@ export default function DebtsPage() {
     Array<{ _id: string; name: string }>
   >([]);
   const [wallets, setWallets] = useState<Array<{ _id: string; name: string }>>(
-    []
+    [],
   );
   const [paying, setPaying] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const fetchAccounts = async () => {
     try {
@@ -178,13 +181,13 @@ export default function DebtsPage() {
             }>(`/transactions?debtId=${debt._id}`);
             const totalPaid = payments.transactions.reduce(
               (sum, t) => sum + t.amount,
-              0
+              0,
             );
             return { ...debt, totalPaid };
           } catch {
             return { ...debt, totalPaid: 0 };
           }
-        })
+        }),
       );
       setDebts(debtsWithPayments);
     } catch (error) {
@@ -212,7 +215,7 @@ export default function DebtsPage() {
           // Calcular dueDate baseado no dia de vencimento do cartão
           const purchaseDateObj = new Date(formData.purchaseDate);
           const creditCard = creditCards.find(
-            (c) => c._id === formData.creditCardId
+            (c) => c._id === formData.creditCardId,
           );
           const dueDateObj = new Date(purchaseDateObj);
           dueDateObj.setMonth(dueDateObj.getMonth() + 1);
@@ -289,7 +292,13 @@ export default function DebtsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900">
+      <div
+        className={`flex items-center justify-center min-h-screen ${
+          isDark
+            ? "bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900"
+            : "bg-gray-50"
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -354,10 +363,24 @@ export default function DebtsPage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Dívidas</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <h1
+            className={`text-3xl font-bold ${
+              isDark ? "text-slate-100" : "text-gray-900"
+            }`}
+          >
+            Dívidas
+          </h1>
+          <p
+            className={`mt-2 text-sm ${
+              isDark ? "text-slate-300" : "text-gray-600"
+            }`}
+          >
             Total não pago:{" "}
-            <span className="font-semibold text-red-300">
+            <span
+              className={`font-semibold ${
+                isDark ? "text-red-300" : "text-red-600"
+              }`}
+            >
               {formatCurrency(totalDebts)}
             </span>
           </p>
@@ -372,10 +395,24 @@ export default function DebtsPage() {
 
       <MonthSelector value={currentMonth} onChange={setCurrentMonth} />
 
-      <div className="bg-slate-900/80 border border-white/10 shadow overflow-hidden sm:rounded-xl backdrop-blur">
-        <ul className="divide-y divide-slate-800">
+      <div
+        className={`shadow overflow-hidden sm:rounded-xl ${
+          isDark
+            ? "bg-slate-900/80 border border-white/10 backdrop-blur"
+            : "bg-white border border-gray-200"
+        }`}
+      >
+        <ul
+          className={`divide-y ${
+            isDark ? "divide-slate-800" : "divide-gray-200"
+          }`}
+        >
           {debts.length === 0 ? (
-            <li className="px-6 py-4 text-center text-slate-300">
+            <li
+              className={`px-6 py-4 text-center ${
+                isDark ? "text-slate-300" : "text-gray-500"
+              }`}
+            >
               Nenhuma dívida cadastrada ainda.
             </li>
           ) : (
@@ -392,7 +429,11 @@ export default function DebtsPage() {
                           <p> - </p>
                         </>
                       )}
-                      <h3 className="text-sm font-medium text-slate-100">
+                      <h3
+                        className={`text-sm font-medium ${
+                          isDark ? "text-slate-100" : "text-gray-900"
+                        }`}
+                      >
                         {debt.description}
                       </h3>
 
@@ -420,7 +461,11 @@ export default function DebtsPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-2 text-sm text-slate-400">
+                    <div
+                      className={`mt-2 text-sm ${
+                        isDark ? "text-slate-400" : "text-gray-500"
+                      }`}
+                    >
                       <span>Vencimento: {formatDate(debt.dueDate)}</span>
                       {debt.creditCardId && (
                         <span className="ml-4">
@@ -444,16 +489,28 @@ export default function DebtsPage() {
                     <div>
                       <span
                         className={`text-lg font-semibold ${
-                          debt.paid ? "text-emerald-300" : "text-red-300"
+                          debt.paid
+                            ? isDark
+                              ? "text-emerald-300"
+                              : "text-green-600"
+                            : isDark
+                              ? "text-red-300"
+                              : "text-red-600"
                         }`}
                       >
                         {formatCurrency(debt.amount)}
                       </span>
-                      {debt.totalPaid && debt.totalPaid > 0 && !debt.paid && (
-                        <p className="text-xs text-slate-400 mt-1">
+                      {debt.totalPaid && debt.totalPaid > 0 && !debt.paid ? (
+                        <p
+                          className={`text-xs mt-1 ${
+                            isDark ? "text-slate-400" : "text-gray-500"
+                          }`}
+                        >
                           Restante:{" "}
                           {formatCurrency(debt.amount - debt.totalPaid)}
                         </p>
+                      ) : (
+                        ""
                       )}
                     </div>
                     {!debt.paid && (
@@ -487,7 +544,7 @@ export default function DebtsPage() {
                     Já pago: {formatCurrency(selectedDebt.totalPaid)} |
                     Restante:{" "}
                     {formatCurrency(
-                      selectedDebt.amount - selectedDebt.totalPaid
+                      selectedDebt.amount - selectedDebt.totalPaid,
                     )}
                   </p>
                 )}
@@ -518,7 +575,7 @@ export default function DebtsPage() {
                     {formatCurrency(
                       selectedDebt.totalPaid
                         ? selectedDebt.amount - selectedDebt.totalPaid
-                        : selectedDebt.amount
+                        : selectedDebt.amount,
                     )}
                   </p>
                 </div>
@@ -531,8 +588,8 @@ export default function DebtsPage() {
                       payFormData.accountId
                         ? `account-${payFormData.accountId}`
                         : payFormData.walletId
-                        ? `wallet-${payFormData.walletId}`
-                        : ""
+                          ? `wallet-${payFormData.walletId}`
+                          : ""
                     }
                     onChange={(e) => {
                       if (e.target.value.startsWith("account-")) {
@@ -838,7 +895,7 @@ export default function DebtsPage() {
                           Cada parcela será de:{" "}
                           {formatCurrency(
                             parseFloat(formData.amount || "0") /
-                              parseInt(formData.installmentCount)
+                              parseInt(formData.installmentCount),
                           )}
                         </p>
                       )}
