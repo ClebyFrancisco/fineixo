@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs';
 import { User as IUser } from '@/types';
 
 interface UserModel extends Model<IUser> {
-  comparePassword(candidatePassword: string, hashedPassword: string): Promise<boolean>;
+  comparePassword(
+    candidatePassword: string,
+    hashedPassword: string
+  ): Promise<boolean>;
 }
 
 const UserSchema = new Schema<IUser, UserModel>(
@@ -32,6 +35,14 @@ const UserSchema = new Schema<IUser, UserModel>(
       unique: true,
       sparse: true,
     },
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -41,7 +52,7 @@ const UserSchema = new Schema<IUser, UserModel>(
 // Hash password before saving
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -55,7 +66,9 @@ UserSchema.statics.comparePassword = async function (
   return bcrypt.compare(candidatePassword, hashedPassword);
 };
 
-export default mongoose.models.User || mongoose.model<IUser, UserModel>('User', UserSchema);
+export default mongoose.models.User ||
+  mongoose.model<IUser, UserModel>('User', UserSchema);
+
 
 
 

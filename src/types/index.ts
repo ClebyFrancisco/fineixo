@@ -6,6 +6,8 @@ export interface User {
   email: string;
   password: string;
   stripeCustomerId?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
