@@ -85,11 +85,11 @@ export default function DashboardLayout({
     >
       <SubscriptionBanner />
       <nav
-        className={
+        className={`relative z-40 ${
           isDark
             ? "border-b border-white/10 bg-slate-900/80 backdrop-blur"
             : "border-b border-gray-200 bg-white"
-        }
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -180,7 +180,7 @@ export default function DashboardLayout({
                 </button>
                 {isProfileOpen && (
                   <div
-                    className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg z-20 ${
+                    className={`absolute right-0 mt-2 w-56 rounded-md shadow-lg z-50 ${
                       isDark
                         ? "bg-slate-900/95 border border-white/10 backdrop-blur"
                         : "bg-white border border-gray-200"
