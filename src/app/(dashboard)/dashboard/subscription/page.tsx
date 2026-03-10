@@ -40,13 +40,16 @@ export default function SubscriptionPage() {
   useEffect(() => {
     fetchSubscription();
     fetchHistory();
+  }, []);
 
+  useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
 
     if (success === 'true') {
       alert('Assinatura criada com sucesso!');
       refreshSubscription();
+      fetchSubscription();
       router.replace('/dashboard/subscription');
     }
 
@@ -54,7 +57,7 @@ export default function SubscriptionPage() {
       alert('Assinatura cancelada');
       router.replace('/dashboard/subscription');
     }
-  }, [searchParams, router, refreshSubscription]);
+  }, [searchParams]);
 
   const fetchSubscription = async () => {
     try {
@@ -188,13 +191,13 @@ export default function SubscriptionPage() {
             <div>
               <p className="text-sm text-gray-500">Início do Período</p>
               <p className="text-lg font-medium text-gray-900">
-                {new Date(subscription.currentPeriodStart).toLocaleDateString('pt-BR')}
+                {new Date(subscription.currentPeriodStart).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Fim do Período</p>
               <p className="text-lg font-medium text-gray-900">
-                {new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR')}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
               </p>
             </div>
           </div>
@@ -268,7 +271,7 @@ export default function SubscriptionPage() {
                 {history.map((item) => (
                   <tr key={item._id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(item.createdAt).toLocaleDateString('pt-BR')}
+                      {new Date(item.createdAt).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {getPlanName(item.plan)}

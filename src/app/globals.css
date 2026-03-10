@@ -26,6 +26,56 @@ body {
   }
 }
 
+/* Inputs always white with dark text */
+input:not([type="radio"]):not([type="checkbox"]),
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: rgb(17 24 39) !important;
+  border-color: rgb(209 213 219) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgb(156 163 175) !important;
+}
+
+select option {
+  background-color: #ffffff;
+  color: rgb(17 24 39);
+}
+
+/* Dark mode: modal / card containers */
+[data-theme="dark"] .bg-white {
+  background-color: rgb(30 41 59);
+  color: rgb(226 232 240);
+  border-color: rgb(51 65 85);
+}
+
+[data-theme="dark"] .text-gray-900 {
+  color: rgb(241 245 249);
+}
+
+[data-theme="dark"] .text-gray-700 {
+  color: rgb(203 213 225);
+}
+
+[data-theme="dark"] .text-gray-600 {
+  color: rgb(148 163 184);
+}
+
+[data-theme="dark"] .text-gray-500 {
+  color: rgb(148 163 184);
+}
+
+[data-theme="dark"] .border-gray-200 {
+  border-color: rgb(51 65 85);
+}
+
+[data-theme="dark"] .border-gray-300 {
+  border-color: rgb(71 85 105);
+}
+
 
 
 

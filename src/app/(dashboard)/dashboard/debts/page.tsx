@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, getLocalDateString, getLocalMonthKey } from "@/lib/utils";
 import MonthSelector from "@/components/MonthSelector";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -24,13 +24,7 @@ export default function DebtsPage() {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}`;
-  });
+  const [currentMonth, setCurrentMonth] = useState(() => getLocalMonthKey());
   const [categories, setCategories] = useState<
     Array<{ _id: string; name: string }>
   >([]);
@@ -59,7 +53,7 @@ export default function DebtsPage() {
     amount: "",
     accountId: "",
     walletId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getLocalDateString(),
   });
   const [accounts, setAccounts] = useState<
     Array<{ _id: string; name: string }>
@@ -128,7 +122,7 @@ export default function DebtsPage() {
       amount: remaining.toString(),
       accountId: "",
       walletId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: getLocalDateString(),
     });
     setShowPayModal(true);
   };
@@ -159,7 +153,7 @@ export default function DebtsPage() {
         amount: "",
         accountId: "",
         walletId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: getLocalDateString(),
       });
       fetchDebts();
     } catch (error: any) {
@@ -212,18 +206,16 @@ export default function DebtsPage() {
       if (isCreditCardPurchase && formData.creditCardId) {
         if (formData.purchaseDate) {
           payload.purchaseDate = formData.purchaseDate;
-          // Calcular dueDate baseado no dia de vencimento do cartão
-          const purchaseDateObj = new Date(formData.purchaseDate);
+          const purchaseDateObj = new Date(formData.purchaseDate + 'T12:00:00');
           const creditCard = creditCards.find(
             (c) => c._id === formData.creditCardId,
           );
           const dueDateObj = new Date(purchaseDateObj);
           dueDateObj.setMonth(dueDateObj.getMonth() + 1);
-          // Ajustar para o dia de vencimento do cartão
           if (creditCard) {
             dueDateObj.setDate(creditCard.bestPurchaseDay);
           }
-          payload.dueDate = dueDateObj.toISOString().split("T")[0];
+          payload.dueDate = `${dueDateObj.getFullYear()}-${String(dueDateObj.getMonth() + 1).padStart(2, '0')}-${String(dueDateObj.getDate()).padStart(2, '0')}`;
         } else {
           payload.dueDate = formData.dueDate;
         }
@@ -310,7 +302,7 @@ export default function DebtsPage() {
 
   const debtsToRender = (() => {
     const filtered = debts.filter((debt) => {
-      const debtMonth = new Date(debt.dueDate).toISOString().slice(0, 7);
+      const debtMonth = typeof debt.dueDate === 'string' ? debt.dueDate.slice(0, 7) : '';
       return debtMonth === currentMonth;
     });
 
@@ -349,14 +341,8 @@ export default function DebtsPage() {
 
   const isOverdue = (debt: Debt) => {
     if (debt.paid) return false;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dueDate = new Date(debt.dueDate);
-    dueDate.setHours(0, 0, 0, 0);
-
-    return dueDate < today;
+    const dueDateStr = typeof debt.dueDate === 'string' ? debt.dueDate.slice(0, 10) : '';
+    return dueDateStr < getLocalDateString();
   };
 
   return (
@@ -651,7 +637,7 @@ export default function DebtsPage() {
                       setShowPayModal(false);
                       setSelectedDebt(null);
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>
@@ -962,7 +948,7 @@ export default function DebtsPage() {
                         installmentCount: "1",
                       });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>

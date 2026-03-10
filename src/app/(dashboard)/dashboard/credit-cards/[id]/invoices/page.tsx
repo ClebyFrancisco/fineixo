@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/services/api";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, getLocalDateString, getLocalMonthKey } from "@/lib/utils";
 import MonthSelector from "@/components/MonthSelector";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -75,17 +75,14 @@ export default function CreditCardInvoicesPage() {
     newTotalAmount: "",
     description: "",
   });
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const [currentMonth, setCurrentMonth] = useState(() => getLocalMonthKey());
   const [showPayModal, setShowPayModal] = useState(false);
   const [payFormData, setPayFormData] = useState({
     amount: "",
     payTotal: false,
     accountId: "",
     walletId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getLocalDateString(),
   });
   const [accounts, setAccounts] = useState<
     Array<{ _id: string; name: string }>
@@ -198,7 +195,7 @@ export default function CreditCardInvoicesPage() {
       payTotal: false,
       accountId: "",
       walletId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: getLocalDateString(),
     });
     setShowPayModal(true);
   };
@@ -312,7 +309,7 @@ export default function CreditCardInvoicesPage() {
         payTotal: false,
         accountId: "",
         walletId: "",
-        date: new Date().toISOString().split("T")[0],
+        date: getLocalDateString(),
       });
       fetchInvoices();
       fetchCreditCard(); // Atualizar limite do cartão
@@ -495,7 +492,7 @@ export default function CreditCardInvoicesPage() {
     setAddFormData({
       description: "",
       amount: "",
-      purchaseDate: new Date().toISOString().split("T")[0],
+      purchaseDate: getLocalDateString(),
       categoryId: "",
       type: "single",
       installmentCount: "1",
@@ -510,11 +507,9 @@ export default function CreditCardInvoicesPage() {
 
     setSubmittingAdd(true);
     try {
-      // Calcular data de vencimento baseada na data de compra e dia de vencimento do cartão
-      const purchaseDateObj = new Date(addFormData.purchaseDate);
+      const purchaseDateObj = new Date(addFormData.purchaseDate + 'T12:00:00');
       const dueDateObj = new Date(purchaseDateObj);
       dueDateObj.setMonth(dueDateObj.getMonth() + 1);
-      // Ajustar para o dia de vencimento do cartão (usar dueDate se disponível, senão bestPurchaseDay)
       dueDateObj.setDate(creditCard.dueDate || creditCard.bestPurchaseDay);
 
       const month = `${dueDateObj.getFullYear()}-${String(dueDateObj.getMonth() + 1).padStart(2, "0")}`;
@@ -525,7 +520,7 @@ export default function CreditCardInvoicesPage() {
         type: addFormData.type === "installment" ? "installment" : "monthly",
         creditCardId: cardId,
         purchaseDate: addFormData.purchaseDate,
-        dueDate: dueDateObj.toISOString().split("T")[0],
+        dueDate: `${dueDateObj.getFullYear()}-${String(dueDateObj.getMonth() + 1).padStart(2, '0')}-${String(dueDateObj.getDate()).padStart(2, '0')}`,
         categoryId: addFormData.categoryId || undefined,
         month: month,
         paid: false,
@@ -550,7 +545,7 @@ export default function CreditCardInvoicesPage() {
       setAddFormData({
         description: "",
         amount: "",
-        purchaseDate: new Date().toISOString().split("T")[0],
+        purchaseDate: getLocalDateString(),
         categoryId: "",
         type: "single",
         installmentCount: "1",
@@ -647,8 +642,8 @@ export default function CreditCardInvoicesPage() {
         amount: adjustmentDifference, // Salvar a DIFERENÇA, não o valor total
         type: "monthly",
         creditCardId: cardId,
-        dueDate: dueDateObj.toISOString().split("T")[0],
-        month: monthString, // Usar o mês que está sendo visualizado
+        dueDate: `${dueDateObj.getFullYear()}-${String(dueDateObj.getMonth() + 1).padStart(2, '0')}-${String(dueDateObj.getDate()).padStart(2, '0')}`,
+        month: monthString,
         paid: false,
       });
 
@@ -1144,14 +1139,14 @@ export default function CreditCardInvoicesPage() {
                       setAddFormData({
                         description: "",
                         amount: "",
-                        purchaseDate: new Date().toISOString().split("T")[0],
+                        purchaseDate: getLocalDateString(),
                         categoryId: "",
                         type: "single",
                         installmentCount: "1",
                         isTotalAmount: false,
                       });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>
@@ -1293,7 +1288,7 @@ export default function CreditCardInvoicesPage() {
                         description: "",
                       });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>
@@ -1372,7 +1367,7 @@ export default function CreditCardInvoicesPage() {
                     setConfirmInvoice(null);
                     setConfirmAction(null);
                   }}
-                  className="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
                   Cancelar
                 </button>
@@ -1554,10 +1549,10 @@ export default function CreditCardInvoicesPage() {
                               payTotal: false,
                               accountId: "",
                               walletId: "",
-                              date: new Date().toISOString().split("T")[0],
+                              date: getLocalDateString(),
                             });
                           }}
-                          className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                         >
                           Cancelar
                         </button>
@@ -1680,7 +1675,7 @@ export default function CreditCardInvoicesPage() {
                       setShowEditModal(false);
                       setEditingInvoice(null);
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>

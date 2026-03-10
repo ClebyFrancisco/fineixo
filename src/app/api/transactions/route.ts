@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const month = searchParams.get('month');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     const accountId = searchParams.get('accountId');
     const creditCardId = searchParams.get('creditCardId');
     const walletId = searchParams.get('walletId');
@@ -38,10 +40,14 @@ export async function GET(request: NextRequest) {
 
     const query: any = { userId: authResult.user.userId };
 
-    if (month) {
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate + 'T00:00:00.000Z'),
+        $lte: new Date(endDate + 'T23:59:59.999Z'),
+      };
+    } else if (month) {
       query.month = month;
     } else {
-      // Se não especificar mês, usa o mês atual
       const now = new Date();
       query.month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
@@ -70,7 +76,7 @@ export async function GET(request: NextRequest) {
       .populate('walletId', 'name')
       .populate('creditCardId', 'name')
       .populate('debtId', 'description amount')
-      .sort({ date: -1 });
+      .sort({ date: 1 });
 
     return NextResponse.json({ transactions });
   } catch (error) {

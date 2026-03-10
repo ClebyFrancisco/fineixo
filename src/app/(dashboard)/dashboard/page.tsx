@@ -1,106 +1,52 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { api } from '@/services/api';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, getLocalDateString, getLocalMonthKey } from '@/lib/utils';
 import Link from 'next/link';
 import { useTheme } from '@/hooks/useTheme';
+import { useFinanceData, type Debt as FinanceDebt } from '@/hooks/useFinanceData';
 
-type Debt = {
-  _id: string;
-  description: string;
-  amount: number;
-  dueDate: string;
-  paid: boolean;
-  categoryId?: { name: string; color?: string };
-  creditCardId?: { name: string };
-  installments?: { current: number; total: number };
-};
-
+type Debt = FinanceDebt;
 type DebtGroup = Debt & { debts?: Debt[] };
 
-type CreditCardSummary = {
-  _id: string;
-  name: string;
-  limit: number;
-  availableLimit: number;
-};
-
-type AccountSummary = {
-  _id: string;
-  name: string;
-  balance: number;
-  bank: string;
-};
-
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
-    totalDebts: 0,
-    totalCreditCards: 0,
-    totalAccounts: 0,
-    totalInvestments: 0,
-  });
-  const [debts, setDebts] = useState<Debt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { dashboardData, dashboardLoading, loadDashboard } = useFinanceData();
   const [showOverdueDetails, setShowOverdueDetails] = useState(false);
-  const [creditCards, setCreditCards] = useState<CreditCardSummary[]>([]);
   const [showCardsDetails, setShowCardsDetails] = useState(false);
-  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [showAccountsDetails, setShowAccountsDetails] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    loadDashboard();
+  }, [loadDashboard]);
 
-  const fetchStats = async () => {
-    try {
-      const [debtsSummaryRes, cardsRes, accountsRes, investmentsRes, debtsRes] =
-        await Promise.all([
-          api.get<{ summary: { total: number } }>('/debts/summary'),
-          api.get<{ creditCards: CreditCardSummary[] }>('/credit-cards'),
-          api.get<{ accounts: AccountSummary[] }>('/accounts'),
-          api.get<{ investments: any[] }>('/investments'),
-          api.get<{ debts: Debt[] }>('/debts?paid=false'),
-        ]);
-
-      setStats({
-        totalDebts: debtsSummaryRes.summary.total,
-        totalCreditCards: cardsRes.creditCards.length,
-        totalAccounts: accountsRes.accounts.length,
-        totalInvestments: investmentsRes.investments.length,
-      });
-      setDebts(debtsRes.debts);
-      setCreditCards(cardsRes.creditCards);
-      setAccounts(accountsRes.accounts);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
+  const stats = dashboardData?.stats ?? {
+    totalDebts: 0,
+    totalCreditCards: 0,
+    totalAccounts: 0,
+    totalInvestments: 0,
   };
+  const debts = (dashboardData?.debts ?? []) as Debt[];
+  const creditCards = dashboardData?.creditCards ?? [];
+  const accounts = dashboardData?.accounts ?? [];
+  const loading = dashboardLoading && !dashboardData;
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const todayStr = useMemo(() => getLocalDateString(), []);
 
   const isOverdue = (debt: Debt) => {
     if (debt.paid) return false;
-    const due = new Date(debt.dueDate);
-    due.setHours(0, 0, 0, 0);
-    return due < today;
+    const dueDateStr = typeof debt.dueDate === 'string' ? debt.dueDate.slice(0, 10) : '';
+    return dueDateStr < todayStr;
   };
 
   const monthKeyFromDate = (date: string | Date) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toISOString().slice(0, 7); // YYYY-MM
+    if (typeof date === 'string') return date.slice(0, 7);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
   };
 
   const currentMonthKey = useMemo(
-    () => monthKeyFromDate(new Date()),
+    () => getLocalMonthKey(),
     []
   );
 

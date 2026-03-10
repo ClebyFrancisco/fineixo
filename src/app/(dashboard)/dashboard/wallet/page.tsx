@@ -1,16 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { api } from '@/services/api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate, getLocalDateString, getLocalMonthKey } from '@/lib/utils';
 import MonthSelector from '@/components/MonthSelector';
 import { useTheme } from '@/hooks/useTheme';
-
-interface Wallet {
-  _id: string;
-  name: string;
-  balance: number;
-}
+import { useFinanceData } from '@/hooks/useFinanceData';
 
 interface Transaction {
   _id: string;
@@ -23,77 +18,62 @@ interface Transaction {
 }
 
 export default function WalletPage() {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const { wallet, walletLoading, loadWallet, invalidate } = useFinanceData();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [currentMonth, setCurrentMonth] = useState(() => getLocalMonthKey());
   const [formData, setFormData] = useState({
     type: 'income' as 'income' | 'expense',
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
   });
   const [submitting, setSubmitting] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const txInflightRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    fetchWallet();
-    fetchTransactions();
-  }, [currentMonth]);
+    loadWallet();
+  }, [loadWallet]);
 
-  const fetchWallet = async () => {
-    try {
-      const data = await api.get<{ wallets: Wallet[] }>('/wallets');
-      let mainWallet = data.wallets.find((w) => w.name === 'Carteira Principal');
-      if (!mainWallet && data.wallets.length > 0) {
-        mainWallet = data.wallets[0];
-      }
-      if (!mainWallet) {
-        // Criar carteira padrão
-        const newWallet = await api.post<{ wallet: Wallet }>('/wallets', {
-          name: 'Carteira Principal',
-          balance: 0,
-        });
-        setWallet(newWallet.wallet);
-      } else {
-        setWallet(mainWallet);
-      }
-    } catch (error) {
-      console.error('Error fetching wallet:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchTransactions = useCallback(async (walletId: string, month: string) => {
+    txInflightRef.current?.abort();
+    const controller = new AbortController();
+    txInflightRef.current = controller;
 
-  const fetchTransactions = async () => {
+    setTransactionsLoading(true);
     try {
       const data = await api.get<{ transactions: Transaction[] }>(
-        `/transactions?month=${currentMonth}&walletId=${wallet?._id || ''}`
+        `/transactions?month=${month}&walletId=${walletId}`,
       );
-      setTransactions(data.transactions);
+      if (!controller.signal.aborted) {
+        setTransactions(data.transactions);
+      }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      if (!controller.signal.aborted) {
+        console.error('Error fetching transactions:', error);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setTransactionsLoading(false);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (wallet) {
-      fetchTransactions();
-    }
-  }, [wallet, currentMonth]);
+    if (!wallet) return;
+    fetchTransactions(wallet._id, currentMonth);
+  }, [wallet, currentMonth, fetchTransactions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!wallet) return;
     setSubmitting(true);
 
     try {
-      const date = new Date(formData.date);
-      const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const month = formData.date.slice(0, 7);
 
       await api.post('/transactions', {
         type: formData.type,
@@ -101,7 +81,7 @@ export default function WalletPage() {
         description: formData.description,
         date: formData.date,
         month,
-        walletId: wallet?._id,
+        walletId: wallet._id,
       });
 
       setShowModal(false);
@@ -109,16 +89,20 @@ export default function WalletPage() {
         type: 'income',
         amount: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       });
-      fetchWallet();
-      fetchTransactions();
+
+      invalidate('wallet', 'dashboard');
+      await loadWallet(true);
+      await fetchTransactions(wallet._id, currentMonth);
     } catch (error: any) {
       alert(error.message || 'Erro ao criar transação');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const loading = (walletLoading && !wallet) || (transactionsLoading && !wallet);
 
   if (loading) {
     return (
@@ -316,7 +300,7 @@ export default function WalletPage() {
                         isDark ? 'text-slate-400' : 'text-gray-500'
                       }`}
                     >
-                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                      {formatDate(transaction.date)}
                     </p>
                   </div>
                   <div className="ml-4">
@@ -412,10 +396,10 @@ export default function WalletPage() {
                         type: 'income',
                         amount: '',
                         description: '',
-                        date: new Date().toISOString().split('T')[0],
+                        date: getLocalDateString(),
                       });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>

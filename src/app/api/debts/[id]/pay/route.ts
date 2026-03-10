@@ -101,9 +101,14 @@ export async function POST(
       finalWalletId = wallet._id.toString();
     }
 
-    // Criar transação de pagamento
     const paymentDate = validatedData.date ? new Date(validatedData.date) : new Date();
-    const month = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+    let month: string;
+    if (validatedData.date && typeof validatedData.date === 'string') {
+      month = validatedData.date.slice(0, 7);
+    } else {
+      const now = new Date();
+      month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
 
     const transaction = await Transaction.create({
       userId: authResult.user.userId,

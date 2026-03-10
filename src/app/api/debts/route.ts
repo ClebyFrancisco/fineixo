@@ -148,10 +148,9 @@ export async function POST(request: NextRequest) {
     if (validatedData.type === 'installment' && installmentCount > 1) {
       const purchaseDate = validatedData.purchaseDate ? new Date(validatedData.purchaseDate) : new Date(validatedData.dueDate);
       
-      // Buscar o cartão para obter o melhor dia e dia de vencimento
-      let bestPurchaseDay = 10; // Default
-      let dueDay = 10; // Default para dia de vencimento
-      let startMonthOffset = 0; // Offset inicial para o mês da primeira parcela
+      let bestPurchaseDay = 10;
+      let dueDay = 10;
+      let startMonthOffset = 0;
       
       if (validatedData.creditCardId) {
         const creditCard = await CreditCard.findOne({
@@ -161,37 +160,30 @@ export async function POST(request: NextRequest) {
         
         if (creditCard) {
           bestPurchaseDay = creditCard.bestPurchaseDay;
-          dueDay = creditCard.dueDate || creditCard.bestPurchaseDay; // Usar dueDate se disponível
-          // Se a compra foi feita antes do melhor dia, primeira parcela entra no mesmo mês
-          // Se foi depois ou no mesmo dia, primeira parcela entra no próximo mês
-          const purchaseDay = purchaseDate.getDate();
+          dueDay = creditCard.dueDate || creditCard.bestPurchaseDay;
+          const purchaseDay = purchaseDate.getUTCDate();
           if (purchaseDay < bestPurchaseDay) {
-            startMonthOffset = 0; // Mesmo mês
+            startMonthOffset = 0;
           } else {
-            startMonthOffset = 1; // Próximo mês
+            startMonthOffset = 1;
           }
         }
       } else {
-        // Se não for cartão, usar a data de vencimento informada
         startMonthOffset = 0;
       }
 
       for (let i = 1; i <= installmentCount; i++) {
-        // Calcular data de vencimento para cada parcela
         const installmentDueDate = new Date(purchaseDate);
-        installmentDueDate.setMonth(installmentDueDate.getMonth() + startMonthOffset + (i - 1));
+        installmentDueDate.setUTCMonth(installmentDueDate.getUTCMonth() + startMonthOffset + (i - 1));
         
-        // Se for cartão, usar o dia de vencimento; senão manter o dia da data de vencimento original
         if (validatedData.creditCardId) {
-          installmentDueDate.setDate(dueDay);
+          installmentDueDate.setUTCDate(dueDay);
         } else {
-          // Se não for cartão, usar o dia da data de vencimento informada
           const baseDueDate = new Date(validatedData.dueDate);
-          installmentDueDate.setDate(baseDueDate.getDate());
+          installmentDueDate.setUTCDate(baseDueDate.getUTCDate());
         }
         
-        // Calcular o mês da parcela
-        const month = `${installmentDueDate.getFullYear()}-${String(installmentDueDate.getMonth() + 1).padStart(2, '0')}`;
+        const month = `${installmentDueDate.getUTCFullYear()}-${String(installmentDueDate.getUTCMonth() + 1).padStart(2, '0')}`;
 
         const debtData: any = {
           description: `${validatedData.description} (${i}/${installmentCount})`,
@@ -223,8 +215,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (creditCard) {
-          // Verificar se há reajuste no mês desta parcela
-          const installmentMonth = `${installmentDueDate.getFullYear()}-${String(installmentDueDate.getMonth() + 1).padStart(2, '0')}`;
+          const installmentMonth = `${installmentDueDate.getUTCFullYear()}-${String(installmentDueDate.getUTCMonth() + 1).padStart(2, '0')}`;
           const hasAdjustment = await Debt.findOne({
             creditCardId: validatedData.creditCardId,
             userId: subscriptionResult.user.userId,
@@ -277,7 +268,7 @@ export async function POST(request: NextRequest) {
 
         if (creditCard) {
           // Verificar se há reajuste no mês
-          const debtMonth = validatedData.month || `${new Date(validatedData.dueDate).getFullYear()}-${String(new Date(validatedData.dueDate).getMonth() + 1).padStart(2, '0')}`;
+          const debtMonth = validatedData.month || `${new Date(validatedData.dueDate).getUTCFullYear()}-${String(new Date(validatedData.dueDate).getUTCMonth() + 1).padStart(2, '0')}`;
           const hasAdjustment = await Debt.findOne({
             creditCardId: validatedData.creditCardId,
             userId: subscriptionResult.user.userId,

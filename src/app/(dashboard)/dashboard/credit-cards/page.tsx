@@ -397,7 +397,7 @@ export default function CreditCardsPage() {
                     setShowDeleteModal(false);
                     setDeletingCard(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
                   Cancelar
                 </button>
@@ -492,7 +492,7 @@ export default function CreditCardsPage() {
                       setEditingCard(null);
                       setFormData({ name: '', limit: '', bestPurchaseDay: '1', dueDate: '10', accountId: '' });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>
@@ -588,7 +588,7 @@ export default function CreditCardsPage() {
                       setShowModal(false);
                       setFormData({ name: '', limit: '', bestPurchaseDay: '1', dueDate: '10', accountId: '' });
                     }}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Cancelar
                   </button>
